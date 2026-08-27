@@ -15,7 +15,7 @@ are what actually returns the right part.
 
 | # | Qty | Item | Search term | ≈USD | Notes |
 |---|---|---|---|---|---|
-| 1 | **2** | ESP32-S3 dev board | `ESP32-S3-DevKitC-1 N16R8` | 6–10 ea | **The `R8` suffix is the point** — that is the 8 MB octal PSRAM. See §4. Buy two: DOA rate is real, and the bench tests involve waving magnets at a rig you don't want to be the installed unit. |
+| 1 | **2** | Dev board — **either** chip | `ESP32-S3-DevKitC-1 N16R8` **or** `ESP32-C6-DevKitC-1 N8` | 6–10 ea | Firmware ships for both; see §4 to choose. On the S3 **the `R8` suffix is the point** — that is the 8 MB octal PSRAM. Buy two of whichever you pick: DOA rate is real, and the bench tests involve waving magnets at a rig you don't want to be the installed unit. |
 | 2 | 1 | Relay module, 1 channel | `1 channel relay module 3V optocoupler` | 1–2 | **Check you don't already have one — a stepper-driver project won't have supplied it.** Wants an explicit PC817 optocoupler and a 3 V coil (`SRD-03VDC-SL-C` or `HK4100F-DC3V`). Contacts only bridge the opener's low-voltage button terminals, so a signal relay is ample; you do not need a 10 A mains relay. |
 | 3 | **4** | Reed switch + magnet | `MC-38 wired door window magnetic sensor` | 1–2 ea | Two installed, two spare/bench. Prefer a **≥15 mm sensing gap**. See §3. |
 | 4 | 1 | Momentary pushbutton | `panel mount momentary push button N/O` | 1–2 | Panel-mount is nicer than a tactile switch here since it is the control you actually press. Factory reset is *not* on this button, so it needn't be recessed. |
@@ -45,8 +45,13 @@ are what actually returns the right part.
 
 ## 4. On the board choice
 
-The project originally targeted an ESP32-C6 and moved to the S3 once the two
-turned out to cost about the same. The reasoning, so nobody has to redo it:
+**Firmware is built and published for both chips, so this decision can wait
+until you actually order** — buy whichever is available and cheaper on the day.
+`garage-door.yaml` is the S3, `garage-door-c6.yaml` is the C6, the wiring is
+identical, and the web flasher detects which board you plugged in.
+
+If you have no reason to prefer one: **take the S3.** The reasoning, so nobody
+has to redo it:
 
 - **Dual core is the real difference.** S3 is dual-core Xtensa LX7 at 240 MHz;
   the C6 is a single 160 MHz RISC-V core. Tier 1 (endstops, state machine,
@@ -63,17 +68,32 @@ turned out to cost about the same. The reasoning, so nobody has to redo it:
   WiFi 6. Neither is used here — this design is committed to ESPHome over
   WiFi — so the cost is future optionality, not function.
 
+### Choosing the C6 instead
+
+Entirely defensible. The C6 is a perfectly adequate host for this design —
+nothing in Tier 1 (endstops, state machine, relay) is remotely stressed by
+either chip, and the BLE proxy works on a C6 with the tuned scan window. You
+give up the second core and PSRAM, and you gain an 802.15.4 radio and WiFi 6.
+Use `garage-door-c6.yaml`; it omits the `psram:` package, which is the only
+functional difference between the two configs.
+
+### If you take the S3
+
 **Verify the marking on the module can itself** (`ESP32-S3-WROOM-1-N16R8`), not
 the seller's listing title. Clones frequently advertise "DevKitC-1" and ship a
-plain N16 with no PSRAM, which throws away the main reason for the switch. If
+plain N16 with no PSRAM, which throws away the main reason for choosing it. If
 you do end up with a non-PSRAM board, delete the `psram:` line from
-`garage-door.yaml`; if you get an `N8R2`, change its mode to `quad`.
+`garage-door.yaml`; if you get an `N8R2`, change its mode to `quad`. Getting
+that wrong is a boot failure, not a warning.
 
 ## 5. Not needed
 
 - **No CH340/USB-UART bridge.** That was only ever a workaround for keeping the
-  door contact on GPIO18 the way upstream does. The pin map here avoids the USB
-  pins outright, which is the simpler fix.
+  door contact on GPIO18 the way upstream does. The pin map here avoids both
+  chips' USB pins outright, which is the simpler fix.
+- **No second set of wiring.** The five signal pins are drawn from the GPIOs
+  free on *both* chips (see [wiring.md](wiring.md)), so the harness does not
+  care which board you bought.
 - **No buzzer or beacon.** Those belong to unattended auto-close, which is
   deliberately out of scope for v1 — it needs an audible and visual warning
   sequence before movement, which is a safety design conversation and not a

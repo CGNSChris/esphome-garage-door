@@ -11,11 +11,12 @@ esphome:
     version: ${project_version}
 
 esp32:
-  board: esp32-s3-devkitc-1
-  variant: esp32s3
+  # Set by the entry point: garage-door.yaml (S3) or garage-door-c6.yaml (C6).
+  board: ${board}
+  variant: ${chip_variant}
   flash_size: ${flash_size}
   framework:
-    type: esp-idf   # the S3 also supports Arduino; esp-idf is the better base here
+    type: esp-idf   # required on the C6; the better base on the S3 too
 
 logger:
 

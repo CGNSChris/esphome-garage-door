@@ -1,6 +1,6 @@
 # esphome-garage-door
 
-Self-hosted ESPHome firmware for an **ESP32-S3** garage door controller with
+Self-hosted ESPHome firmware for an **ESP32-S3 or ESP32-C6** garage door controller with
 **two endstop sensors** and a real state machine. A fork-in-spirit of Athom's
 `athom-garage-door.yaml`, rebuilt to remove its weaknesses:
 
@@ -28,9 +28,18 @@ Self-hosted ESPHome firmware for an **ESP32-S3** garage door controller with
 
 ## Hardware
 
-**ESP32-S3-DevKitC-1-N16R8** (16 MB flash, 8 MB octal PSRAM), opto-isolated
-3 V relay module, two reed switches, **mandatory 10 kΩ pull-down on the relay
-GPIO**.
+**Either** an ESP32-S3-DevKitC-1-N16R8 or an ESP32-C6-DevKitC-1-N8, plus an
+opto-isolated 3 V relay module, two reed switches, and a **mandatory 10 kΩ
+pull-down on the relay GPIO**.
+
+| Board | Entry point | Why |
+|---|---|---|
+| ESP32-S3-DevKitC-1-N16R8 | `garage-door.yaml` | Dual core + 8 MB PSRAM — the better BLE proxy host |
+| ESP32-C6-DevKitC-1-N8 | `garage-door-c6.yaml` | Cheaper/more available; adds a Thread/Zigbee radio |
+
+**The pin map is identical for both** — chosen from GPIOs that are free on
+either chip, so one wiring harness fits and swapping boards needs no rewiring.
+CI builds both and the parity check keeps every non-board setting in sync.
 
 ![Wiring diagram](docs/wiring.svg)
 
@@ -39,9 +48,11 @@ What to order and why this part: [docs/bom.md](docs/bom.md).
 
 ## Install
 
-1. Copy `garage-door.yaml`, set the substitutions (WiFi, pins, polarity).
-2. First flash by USB: `esphome run garage-door.yaml`, or use the hosted
-   web flasher once Pages is live.
+1. Copy the entry point for your board (`garage-door.yaml` for the S3,
+   `garage-door-c6.yaml` for the C6) and set the substitutions (WiFi, polarity).
+2. First flash by USB: `esphome run <your-entry-point>.yaml`, or use the
+   [hosted web flasher](https://cgnschris.github.io/esphome-garage-door/),
+   which detects which chip you plugged in and flashes the matching image.
 3. Calibrate: [docs/calibration.md](docs/calibration.md) — determines
    `opener_cycle_mode`, `open_duration`, `close_duration`.
 4. **Run the bench acceptance tests below before wiring the relay to the
@@ -81,11 +92,15 @@ design brief, documented there).
 GitHub Actions builds every push to `main` with `esphome/build-action@v8.0.0`
 and publishes to GitHub Pages:
 
-- `/index.html` — esp-web-tools USB flasher
-- `/firmware/` — factory + OTA binaries, web-tools manifest
-- `/manifest.json` — OTA manifest for ESPHome's `update` component
-  (served from Pages, not Releases, because Releases redirects overflow the
-  http_request buffer)
+- `/index.html` — esp-web-tools USB flasher, chip auto-detecting
+- `/firmware/s3/`, `/firmware/c6/` — factory + OTA binaries per variant
+- `/firmware/manifest.json` — esp-web-tools manifest, one `builds` array
+  covering both chips; esp-web-tools probes the board over serial and picks
+  the matching entry
+- `/manifest.json` — OTA manifest, also one `builds` array. Each device
+  matches its own `chipFamily`, so a single URL serves both variants and an
+  S3 can never pull C6 firmware. Served from Pages, not Releases, because
+  Releases redirects overflow the http_request buffer
 
 TLS verification ships **off** (`ota_verify_ssl: "false"`) and is documented
 inline in `packages/core.yaml`: firmware integrity is gated by the manifest
@@ -132,5 +147,5 @@ relay contacts for 1.
    endstops.
 10. OTA: publish a build, confirm the update entity appears, installs, and
     comes back with pins intact.
-11. `esphome config garage-door.yaml` validates clean and CI is green before
-    any hardware is involved.
+11. `esphome config` validates clean for **both** entry points, the variant
+    parity check passes, and CI is green — all before any hardware is involved.

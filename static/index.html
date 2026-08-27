@@ -5,24 +5,70 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Garage Door Controller — firmware</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 42rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.5; }
-    code { background: #eee; padding: 0.1em 0.3em; border-radius: 3px; }
+    :root { color-scheme: light dark; }
+    body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+           max-width: 44rem; margin: 3rem auto; padding: 0 1.25rem; line-height: 1.55; }
+    code { background: rgba(127,127,127,.18); padding: .1em .35em; border-radius: 3px; font-size: .92em; }
+    h1 { margin-bottom: .25rem; }
+    .sub { opacity: .75; margin-top: 0; }
+    .card { border: 1px solid rgba(127,127,127,.35); border-radius: 10px; padding: 1rem 1.25rem; margin: 1.5rem 0; }
+    table { border-collapse: collapse; width: 100%; margin: .5rem 0 0; }
+    th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid rgba(127,127,127,.25); font-size: .93rem; }
+    th { font-weight: 600; }
+    .note { font-size: .88rem; opacity: .8; }
+    esp-web-install-button { display: block; margin: .75rem 0 .25rem; }
   </style>
 </head>
 <body>
   <h1>Garage Door Controller</h1>
-  <p>Self-hosted ESPHome firmware for an ESP32-S3 dual-endstop garage door
-     controller. Source: <a href="https://github.com/CGNSChris/esphome-garage-door">CGNSChris/esphome-garage-door</a>.</p>
+  <p class="sub">Self-hosted ESPHome firmware — two endstops, a real state machine,
+     and no dependency on the network to open your door.
+     Source: <a href="https://github.com/CGNSChris/esphome-garage-door">CGNSChris/esphome-garage-door</a>.</p>
 
-  <h2>First flash (USB)</h2>
-  <p>Connect the board by USB and click install. Use the board's
-     <strong>UART USB port</strong> if it has both, and Chrome or Edge.</p>
-  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
-  <esp-web-install-button manifest="firmware/manifest.json"></esp-web-install-button>
+  <div class="card">
+    <h2 style="margin-top:0">Install over USB</h2>
+    <p><strong>You don't need to pick a chip.</strong> Plug the board in and the
+       installer identifies it over serial, then flashes the matching firmware.
+       Supported boards:</p>
+    <table>
+      <thead><tr><th>Board</th><th>Chip</th><th>Config</th></tr></thead>
+      <tbody>
+        <tr><td>ESP32-S3-DevKitC-1-N16R8</td><td>ESP32-S3</td><td><code>garage-door.yaml</code></td></tr>
+        <tr><td>ESP32-C6-DevKitC-1-N8</td><td>ESP32-C6</td><td><code>garage-door-c6.yaml</code></td></tr>
+      </tbody>
+    </table>
+    <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+    <esp-web-install-button manifest="firmware/manifest.json"></esp-web-install-button>
+    <p class="note">Needs Chrome or Edge (Web Serial). If your board has two USB
+       ports, use the <strong>UART</strong> one. If the installer says the chip
+       isn't supported, it has detected something other than an S3 or C6 —
+       check you have the right board before forcing anything.</p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Wiring is identical either way</h2>
+    <p>The pin map is deliberately chosen from GPIOs that are safe on
+       <em>both</em> chips, so one harness works with either board and swapping
+       boards needs no rewiring.</p>
+    <table>
+      <tbody>
+        <tr><td>Closed endstop</td><td><code>GPIO18</code></td></tr>
+        <tr><td>Open endstop</td><td><code>GPIO10</code></td></tr>
+        <tr><td>Relay trigger</td><td><code>GPIO7</code></td></tr>
+        <tr><td>Wall button</td><td><code>GPIO11</code></td></tr>
+        <tr><td>Status LED</td><td><code>GPIO2</code></td></tr>
+      </tbody>
+    </table>
+    <p class="note">A <strong>10 kΩ pull-down on the relay GPIO is mandatory</strong> —
+       see the <a href="https://github.com/CGNSChris/esphome-garage-door/blob/main/docs/wiring.md">wiring guide</a>.
+       Bench-test before connecting anything to the opener.</p>
+  </div>
 
   <h2>Updates</h2>
-  <p>After the first flash, the device updates itself over WiFi from
-     <a href="manifest.json"><code>manifest.json</code></a> (checked every 6 h,
-     installed only when you press Install in Home Assistant).</p>
+  <p>After the first flash the device updates itself over WiFi from
+     <a href="manifest.json"><code>manifest.json</code></a>, which carries a build
+     for each chip. A device only ever matches its own <code>chipFamily</code>,
+     so an S3 cannot pull C6 firmware or vice versa. Checked every 6 hours;
+     installed when you press Install in Home Assistant.</p>
 </body>
 </html>

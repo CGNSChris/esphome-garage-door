@@ -11,9 +11,9 @@ substitutions:
   name: garage-door-cal
   friendly_name: Garage Door Calibration
 
-  pin_endstop_closed: GPIO4
-  pin_endstop_open: GPIO5
-  pin_relay: GPIO6
+  pin_endstop_closed: GPIO18
+  pin_endstop_open: GPIO10
+  pin_relay: GPIO7
 
   endstop_closed_inverted: "false"
   endstop_open_inverted: "false"
@@ -22,7 +22,11 @@ substitutions:
   wifi_ssid: "REPLACE_ME"
   wifi_password: "REPLACE_ME"
 
-  flash_size: 16MB   # N16R8. Set 8MB if you bought an N8R8.
+  # Match your board. S3: esp32-s3-devkitc-1 / esp32s3 / 16MB (N16R8).
+  #                     C6: esp32-c6-devkitc-1 / esp32c6 / 8MB  (N8).
+  board: esp32-s3-devkitc-1
+  chip_variant: esp32s3
+  flash_size: 16MB
 
 esphome:
   name: ${name}
@@ -30,8 +34,8 @@ esphome:
   min_version: 2026.7.0
 
 esp32:
-  board: esp32-s3-devkitc-1
-  variant: esp32s3
+  board: ${board}
+  variant: ${chip_variant}
   flash_size: ${flash_size}
   framework:
     type: esp-idf

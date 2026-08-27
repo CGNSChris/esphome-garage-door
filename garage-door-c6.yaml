@@ -1,9 +1,9 @@
 # ============================================================================
-# Garage Door Controller — ESP32-S3 variant  (adoptable entry point)
+# Garage Door Controller — ESP32-C6 variant  (adoptable entry point)
 #
 # There are two entry points. Pick the one matching the board you bought:
-#   garage-door.yaml      ESP32-S3-DevKitC-1-N16R8   <- this file
-#   garage-door-c6.yaml   ESP32-C6-DevKitC-1-N8
+#   garage-door.yaml      ESP32-S3-DevKitC-1-N16R8
+#   garage-door-c6.yaml   ESP32-C6-DevKitC-1-N8        <- this file
 #
 # The pin map is IDENTICAL between them by design, so one wiring harness works
 # with either board and you can swap chips without rewiring. Everything below
@@ -18,10 +18,10 @@ substitutions:
   friendly_name: Garage Door
 
   # ======================= BOARD (differs per variant) ======================
-  board: esp32-s3-devkitc-1
-  chip_variant: esp32s3
-  flash_size: 16MB   # N16R8. Set 8MB for an N8R8.
-  variant_yaml: garage-door.yaml
+  board: esp32-c6-devkitc-1
+  chip_variant: esp32c6
+  flash_size: 8MB    # N8. The C6 has no PSRAM variant.
+  variant_yaml: garage-door-c6.yaml
   # ==========================================================================
 
   # --- Pins (safe on BOTH the S3 and the C6) --------------------------------
@@ -77,7 +77,7 @@ substitutions:
 # Adoption pulls from THIS fork — never Athom's manifest (their W3 trap:
 # installing from an upstream manifest silently reverts pins and logic).
 dashboard_import:
-  package_import_url: github://CGNSChris/esphome-garage-door/garage-door.yaml@main
+  package_import_url: github://CGNSChris/esphome-garage-door/garage-door-c6.yaml@main
   import_full_config: false
 
 packages:
@@ -85,9 +85,9 @@ packages:
   io: !include packages/io.yaml
   state_machine: !include packages/state-machine.yaml
   diagnostics: !include packages/diagnostics.yaml
-  # S3 ONLY. The C6 has no PSRAM support, which is why garage-door-c6.yaml
-  # omits this line. Delete it here too if you bought a plain N8/N16 S3.
-  psram: !include packages/psram.yaml
+  # No psram: here — the ESP32-C6 has no PSRAM support at all. This is the
+  # main functional difference between the two variants, and the reason the
+  # S3 is the better host for the BLE proxy.
   # Tier 3 — disposable. Delete or comment this single line to drop the BLE
   # proxy entirely, or set ble_proxy_enabled: "false" to keep it flashed but idle.
   ble_proxy: !include packages/ble-proxy.yaml

@@ -1,9 +1,19 @@
 # Wiring
 
-MCU: **ESP32-S3-DevKitC-1-N16R8** (16 MB flash, 8 MB octal PSRAM).
-Framework: esp-idf. See [bom.md](bom.md) for why this part and what to order.
+MCU: **either** an ESP32-S3-DevKitC-1-N16R8 or an ESP32-C6-DevKitC-1-N8.
+Framework: esp-idf on both. See [bom.md](bom.md) for the trade-off and what to
+order.
 
-![Wiring diagram: two reed endstops and a wall button switch to ground on GPIO4/5/7 with internal pull-ups; GPIO6 drives an opto-isolated relay and carries a mandatory 10 kΩ pull-down; the relay's dry contacts parallel the opener's wall-button terminals](wiring.svg)
+**The wiring is identical for both boards.** The pin map below is drawn from the
+intersection of the two chips' usable GPIOs specifically so one harness fits
+either, and swapping boards needs no rewiring. Pick your entry point:
+
+| Board | Config | Notes |
+|---|---|---|
+| ESP32-S3-DevKitC-1-N16R8 | `garage-door.yaml` | Dual core + 8 MB PSRAM; better BLE proxy host |
+| ESP32-C6-DevKitC-1-N8 | `garage-door-c6.yaml` | Single core, no PSRAM; adds Thread/Zigbee radio |
+
+![Wiring diagram: two reed endstops and a wall button switch to ground on GPIO18/10/11 with internal pull-ups; GPIO7 drives an opto-isolated relay and carries a mandatory 10 kΩ pull-down; the relay's dry contacts parallel the opener's wall-button terminals](wiring.svg)
 
 The reed switches and wall button share a common ground with the controller.
 The relay's contacts do **not** — they are a dry contact on the far side of the
@@ -14,28 +24,38 @@ button.
 
 | Function | Substitution | Default | Notes |
 |---|---|---|---|
-| Closed endstop reed | `pin_endstop_closed` | GPIO4 | `INPUT_PULLUP`, polarity via `endstop_closed_inverted` |
-| Open endstop reed | `pin_endstop_open` | GPIO5 | `INPUT_PULLUP`, polarity via `endstop_open_inverted` |
-| Relay trigger | `pin_relay` | GPIO6 | `restore_mode: ALWAYS_OFF` + hardware pull-down |
-| Local button | `pin_button` | GPIO7 | `INPUT_PULLUP`, active low |
-| Status LED | `pin_status_led` | GPIO15 | 1 kΩ series resistor |
+| Closed endstop reed | `pin_endstop_closed` | GPIO18 | `INPUT_PULLUP`, polarity via `endstop_closed_inverted` |
+| Open endstop reed | `pin_endstop_open` | GPIO10 | `INPUT_PULLUP`, polarity via `endstop_open_inverted` |
+| Relay trigger | `pin_relay` | GPIO7 | `restore_mode: ALWAYS_OFF` + hardware pull-down |
+| Local button | `pin_button` | GPIO11 | `INPUT_PULLUP`, active low |
+| Status LED | `pin_status_led` | GPIO2 | 1 kΩ series resistor |
 
-### Pins you cannot use on the S3
+### Why these five
 
-| Pins | Why |
-|---|---|
-| GPIO19, GPIO20 | Native USB D−/D+ |
-| GPIO26–GPIO32 | SPI flash |
-| GPIO33–GPIO37 | Octal PSRAM — applies to every "R8" board (N8R8, N16R8) |
-| GPIO0, GPIO3, GPIO45, GPIO46 | Strapping pins |
+Each chip reserves a different set of pins, so the defaults are taken from the
+intersection of what both leave free:
 
-The five defaults above are clear of all of that on any S3-DevKitC-1 variant.
+| Reserved on | Pins | Why |
+|---|---|---|
+| S3 | GPIO19, GPIO20 | Native USB D−/D+ |
+| S3 | GPIO0, GPIO3, GPIO45, GPIO46 | Strapping |
+| S3 | GPIO43, GPIO44 | UART0 — the logger |
+| S3 | GPIO26–GPIO32 | SPI flash |
+| S3 | GPIO33–GPIO37 | Octal PSRAM (every "R8" board) |
+| C6 | GPIO12, GPIO13 | Native USB-Serial-JTAG D−/D+ |
+| C6 | GPIO4, GPIO5, GPIO8, GPIO9, GPIO15 | Strapping |
+| C6 | GPIO16, GPIO17 | UART0 — the logger |
+| C6 | GPIO24–GPIO30 | SPI flash |
+
+**Free on both: GPIO1, 2, 6, 7, 10, 11, 14, 18, 21.** The five defaults come
+from that list, which is why the harness is portable. Both configs are
+validated in CI, and ESPHome checks pin numbers against the board definition —
+so an illegal pin fails the build rather than the door.
 
 This is the trap that bit the upstream config (its W2): Athom put the door
 contact on GPIO18, which is a USB pin on the C3. It worked only because their
-board carries a CH340 bridge and doesn't use native USB. Don't inherit pin
-numbers across chip families without re-checking them — GPIO19 was fine on the
-C6 this project originally targeted and is a USB pin here.
+board carries a CH340 bridge and doesn't use native USB. Never inherit pin
+numbers across chip families without re-checking them.
 
 ## Required external components
 
