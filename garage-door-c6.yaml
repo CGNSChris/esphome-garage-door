@@ -84,6 +84,10 @@ packages:
   core: !include packages/core.yaml
   io: !include packages/io.yaml
   state_machine: !include packages/state-machine.yaml
+  # OPTIONAL: an extra button on the controller enclosure. Delete this line
+  # if you are relying on the opener's existing wall switch for local control,
+  # which is the usual case. It is unrelated to that switch.
+  local_button: !include packages/local-button.yaml
   diagnostics: !include packages/diagnostics.yaml
   # No psram: here — the ESP32-C6 has no PSRAM support at all. This is the
   # main functional difference between the two variants, and the reason the

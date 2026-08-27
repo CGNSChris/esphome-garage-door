@@ -84,6 +84,10 @@ packages:
   core: !include packages/core.yaml
   io: !include packages/io.yaml
   state_machine: !include packages/state-machine.yaml
+  # OPTIONAL: an extra button on the controller enclosure. Delete this line
+  # if you are relying on the opener's existing wall switch for local control,
+  # which is the usual case. It is unrelated to that switch.
+  local_button: !include packages/local-button.yaml
   diagnostics: !include packages/diagnostics.yaml
   # S3 ONLY. The C6 has no PSRAM support, which is why garage-door-c6.yaml
   # omits this line. Delete it here too if you bought a plain N8/N16 S3.

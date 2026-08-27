@@ -20,8 +20,10 @@ Self-hosted ESPHome firmware for an **ESP32-S3 or ESP32-C6** garage door control
 
 **The door must work with the network down.**
 
-- **Tier 1 — must never fail:** endstop sensing, state machine, local button,
-  relay pulse. Entirely on-device; no WiFi/API/DNS dependency.
+- **Tier 1 — must never fail:** endstop sensing, state machine, relay pulse
+  (plus the optional local button). Entirely on-device; no WiFi/API/DNS
+  dependency. Your opener's existing wall switch is untouched and keeps working
+  regardless of this controller — the relay sits in parallel with it.
 - **Tier 2 — should work:** HA cover entity, diagnostics, OTA.
 - **Tier 3 — disposable:** the BLE proxy. First to degrade, last to get
   resources. Delete one line in `garage-door.yaml` to drop it.

@@ -40,21 +40,6 @@ binary_sensor:
     on_release:
       - script.execute: on_open_endstop_release
 
-  - platform: gpio
-    id: local_button
-    name: Wall Button
-    entity_category: diagnostic
-    pin:
-      number: ${pin_button}
-      inverted: true
-      mode:
-        input: true
-        pullup: true
-    filters:
-      - delayed_on: 30ms
-    on_press:
-      - script.execute: on_local_button
-
 switch:
   # The raw relay is internal on purpose: nothing may pulse it except the
   # state machine. Exposing it to HA would bypass every safety rule here.

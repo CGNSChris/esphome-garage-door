@@ -40,7 +40,7 @@ tapping the button circuit.
 | Closed endstop reed | `pin_endstop_closed` | GPIO18 | `INPUT_PULLUP`, polarity via `endstop_closed_inverted` |
 | Open endstop reed | `pin_endstop_open` | GPIO10 | `INPUT_PULLUP`, polarity via `endstop_open_inverted` |
 | Relay trigger | `pin_relay` | GPIO7 | `restore_mode: ALWAYS_OFF` + hardware pull-down |
-| Local button | `pin_button` | GPIO11 | `INPUT_PULLUP`, active low |
+| Local button *(optional)* | `pin_button` | GPIO11 | `INPUT_PULLUP`, active low. See below — you probably want to skip this |
 | Status LED | `pin_status_led` | GPIO2 | 1 kΩ series resistor |
 
 ### Why these five
@@ -70,6 +70,30 @@ contact on GPIO18, which is a USB pin on the C3. It worked only because their
 board carries a CH340 bridge and doesn't use native USB. Never inherit pin
 numbers across chip families without re-checking them.
 
+## The two buttons are not the same thing
+
+This trips people up, so plainly:
+
+- **Your opener's existing wall switch** is wired to the *opener's* terminals.
+  It is **never connected to the ESP32**. You do not rewire it, extend it, or
+  tap it. The relay simply lands across the same two terminals, in parallel, so
+  both work independently and the opener sees the same momentary short it
+  always has.
+- **`pin_button` (GPIO11)** is an entirely separate, **optional new button** you
+  would mount on the controller's own enclosure.
+
+**You almost certainly don't want the optional button.** Its only job is local
+control when the network is down — and a hardwired wall switch already does
+that job better, since it works even if the controller is unplugged or dead. To
+drop it, delete one line from your entry point:
+
+```yaml
+  local_button: !include packages/local-button.yaml
+```
+
+Then leave GPIO11 unwired. Both variants are validated in CI with and without
+it, so removing it is a supported configuration and not a hack.
+
 ## Required external components
 
 1. **10 kΩ pull-down from the relay GPIO to GND — MANDATORY.**
@@ -81,14 +105,16 @@ numbers across chip families without re-checking them.
 2. **1 kΩ series resistor** on the status LED.
 3. **Opto-isolated relay module** with a 3 V coil, triggered from 3.3 V logic.
    Relay contacts wire in parallel with the opener's wall-button terminals.
-4. **Two reed switches** (MC-38 class) with magnets, on 2-core alarm cable:
+4. *(Optional)* a momentary pushbutton for the enclosure, if you decided you
+   want the local button above. Skip it and skip this part.
+5. **Two reed switches** (MC-38 class) with magnets, on 2-core alarm cable:
    - *Closed* endstop: magnet on the door, switch on the frame, aligned when
      the door is fully closed.
    - *Open* endstop: switch positioned so it activates only at full open
      (usually on the track near the motor head).
    Reed wiring: one core to the GPIO, the other to GND. The firmware enables
    the internal pull-up.
-5. **4.7 kΩ pull-up to 3.3 V per endstop — only if that cable run exceeds
+6. **4.7 kΩ pull-up to 3.3 V per endstop — only if that cable run exceeds
    ~10 m.** The ESP32's internal pull-up is weak (~45 kΩ). Against the
    capacitance of a long 2-core run that gives slow edges and more noise
    pickup. An external 4.7 kΩ at the *board* end stiffens the line
