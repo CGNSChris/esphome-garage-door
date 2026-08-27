@@ -45,6 +45,56 @@ correct it: reaching either endstop always snaps the state machine to that
 endstop's state, and reaching no endstop within the timeout faults. This is
 logged as a warning when it happens.
 
+## Check this first: is your wall button a dry contact?
+
+The relay works by shorting the opener's two wall-button terminals, in parallel
+with the existing switch (see [wiring.md](wiring.md)). That only works if the
+wall button is a **plain momentary dry contact** — two wires, shorted together
+to trigger. Most openers are.
+
+Some newer openers instead use a **digital wall console** that talks a serial
+protocol over those two wires (Chamberlain/LiftMaster "Security+ 2.0" is the
+common one, often a multi-button console with a light switch and an LED).
+**Shorting those terminals does nothing, or confuses the console.** No relay
+wiring will fix that; those openers need either an adapter that speaks the
+protocol or a connection at a different point.
+
+How to tell, before you buy anything:
+
+1. Look at the wall console. One plain momentary button on two wires is almost
+   always a dry contact. A console with several buttons, a light control, an
+   LED, or a lock function is a strong hint it's digital.
+2. Meter the two terminals with the door idle. A dry-contact opener shows a
+   steady low DC voltage (commonly 5–24 V) that collapses to ~0 V while the
+   button is held. A digital console shows an unsteady reading that doesn't
+   behave like a clean short.
+3. Definitive test: briefly bridge the two terminals with a wire link. If the
+   door moves, a relay across them will work. If nothing happens, it's digital.
+
+Everything else in this project — the dual endstops, the state machine, the
+fault handling — is independent of this. Only the relay output depends on it.
+
+## Detecting movement you didn't command
+
+Worth being explicit, because it's a consequence of sensing the door rather
+than the button: **the controller cannot see the wall switch or the RF handset
+being pressed.** It doesn't need to. The reed endstops watch the door, so:
+
+- Door leaves the closed endstop with no command from us → the firmware logs
+  *external control* and adopts `OPENING`. Same in reverse from `OPEN`.
+- Arriving at either endstop always snaps the state to that endstop, whoever
+  caused the movement, and clears any outstanding fault.
+
+The one gap: if someone presses the **wall switch mid-travel** — stopping or
+reversing the door partway — the controller keeps believing the original
+direction until the travel timer expires, then reports `FAULT_TIMEOUT`. That is
+safe (position is honestly reported as unknown, commands are refused) and it
+**self-heals**: the next time the door reaches either endstop, the fault clears
+and the state is correct again. Closing that gap properly would mean wiring an
+opto-isolated sense input across the button terminals so the controller can see
+every pulse including its own — worth doing only if mixed mid-travel control
+turns out to be common in practice.
+
 ## Openers this cannot model
 
 - Openers whose stopped-state behaviour is "always close" rather than

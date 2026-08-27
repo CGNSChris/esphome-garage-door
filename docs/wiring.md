@@ -15,10 +15,23 @@ either, and swapping boards needs no rewiring. Pick your entry point:
 
 ![Wiring diagram: two reed endstops and a wall button switch to ground on GPIO18/10/11 with internal pull-ups; GPIO7 drives an opto-isolated relay and carries a mandatory 10 kΩ pull-down; the relay's dry contacts parallel the opener's wall-button terminals](wiring.svg)
 
-The reed switches and wall button share a common ground with the controller.
+The reed switches and our own button share a common ground with the controller.
 The relay's contacts do **not** — they are a dry contact on the far side of the
-module's optocoupler, and wire in parallel with the opener's existing wall
-button.
+module's optocoupler.
+
+**Your existing wall switch stays connected.** The relay contact and the wall
+switch bridge the *same two* opener terminals, so they sit in parallel and
+either one operates the door. Nothing is removed and nothing is intercepted;
+the opener still sees exactly the momentary short it has always seen. Before
+wiring anything, confirm your wall button really is a dry contact and not a
+digital console — see
+[opener-compatibility.md](opener-compatibility.md#check-this-first-is-your-wall-button-a-dry-contact).
+
+**Position sensing is independent of all of that.** The controller has no idea
+whether a press came from us, the wall switch, or the RF handset — it watches
+the *door* through the two reeds. So the state stays correct however the door
+was operated, which is exactly why this design needs the reeds rather than
+tapping the button circuit.
 
 ## Pin map (defaults — change via substitutions, never in packages/)
 
