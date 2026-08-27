@@ -4,9 +4,16 @@ Three numbers and one behaviour need to be measured on *your* opener before
 the controller can be trusted: the opener's cycle type, the open travel time,
 and the close travel time.
 
-You can do this with the main firmware installed (watching the log), or with
-the dedicated `calibration/calibrate.yaml` config, which adds a raw
-**Pulse Relay** button and reports travel times as sensors.
+**You do not need any hardware for most of this.** All three values come from
+watching the door move, and your opener's existing wall button drives it just
+as well as our relay will — the relay only reproduces the same momentary short.
+So do sections 1 and 2 with the wall button and a stopwatch *before* the parts
+arrive, and the firmware can be flashed already configured.
+
+The dedicated `calibration/calibrate.yaml` config exists for when you do have
+hardware: it adds a raw **Pulse Relay** button and reports travel times
+automatically from the endstops, which is more precise than a stopwatch. Use it
+to confirm, not to start.
 
 ## 1. Determine the cycle type
 
@@ -19,6 +26,9 @@ the dedicated `calibration/calibrate.yaml` config, which adds a raw
    - The door **stops** (and a further press moves it the other way) →
      **Type B**, set `opener_cycle_mode: stop_then_reverse`.
 4. Record the result in `garage-door.yaml`.
+
+This works with the wall button alone. Nothing needs to be wired to the opener
+for it, because the wall button and the relay do exactly the same thing.
 
 If you cannot test yet, leave the default `stop_then_reverse`: an extra pulse
 on a Type A opener stops the door, whereas a missing pulse on a Type B opener
@@ -35,10 +45,15 @@ a bug. See `docs/opener-compatibility.md` for the full pulse table.
 
 ## 2. Measure travel times
 
-1. From fully closed, start the door and time it with a stopwatch until it
-   reaches fully open. (With `calibrate.yaml` flashed, the **Last Open
-   Duration** sensor reports it automatically from the endstops.)
-2. Repeat for the close direction.
+Also doable today, with a phone stopwatch.
+
+1. From fully closed, start the door and time it until it reaches fully open.
+   Time the *door*, not your reaction — run it two or three times and take the
+   longest, since the travel timeout is derived from these and an
+   underestimate causes false faults. (With `calibrate.yaml` flashed later, the
+   **Last Open Duration** sensor reports it automatically from the endstops,
+   which is worth doing as a check.)
+2. Repeat for the close direction. Close is often slower than open.
 3. Write the values into `garage-door.yaml`:
 
 ```yaml

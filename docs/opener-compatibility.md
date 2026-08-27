@@ -74,6 +74,10 @@ How to tell, before you buy anything:
 Everything else in this project — the dual endstops, the state machine, the
 fault handling — is independent of this. Only the relay output depends on it.
 
+> **This install:** confirmed 2026-08-27 — a plain momentary dry-contact wall
+> switch. The relay-in-parallel approach applies as designed, and no adapter or
+> protocol work is needed.
+
 ## Detecting movement you didn't command
 
 Worth being explicit, because it's a consequence of sensing the door rather
