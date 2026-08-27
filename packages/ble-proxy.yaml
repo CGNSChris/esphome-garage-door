@@ -5,9 +5,12 @@
 esp32_ble_tracker:
   scan_parameters:
     # window 30ms in interval 320ms ≈ 9% receive duty cycle.
-    # Athom shipped window 300ms ≈ 94% (upstream W8), which starves WiFi on a
-    # single-core part with one shared 2.4 GHz radio and time-division
-    # coexistence. The cost is only slightly slower BLE device discovery.
+    # Athom shipped window 300ms ≈ 94% (upstream W8), which starves WiFi.
+    # This stays tuned down even on the dual-core S3: the S3 buys CPU headroom
+    # but NOT airtime — it still has a single 2.4 GHz RF chain with
+    # time-division WiFi/BLE coexistence, exactly like the C3 and C6. The duty
+    # cycle is the radio problem; the second core only relieves the smaller,
+    # CPU-side half of it. Cost of 30ms is slightly slower device discovery.
     interval: 320ms
     window: 30ms
     active: true

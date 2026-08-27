@@ -10,14 +10,16 @@ substitutions:
   name: garage-door
   friendly_name: Garage Door
 
-  # --- Pins (ESP32-C6) --------------------------------------------------
-  # Never use GPIO12/GPIO13 (native USB-Serial-JTAG D-/D+).
-  # Avoid GPIO4, GPIO5, GPIO8, GPIO9, GPIO15 (strapping pins).
-  pin_endstop_closed: GPIO18
-  pin_endstop_open: GPIO19
-  pin_relay: GPIO7
-  pin_button: GPIO3
-  pin_status_led: GPIO2
+  # --- Pins (ESP32-S3) --------------------------------------------------
+  # Never use: GPIO19/GPIO20 (native USB D-/D+), GPIO26-GPIO32 (SPI flash),
+  # GPIO0/GPIO3/GPIO45/GPIO46 (strapping). On octal-PSRAM boards (N8R8,
+  # N16R8) GPIO33-GPIO37 are taken by the PSRAM as well.
+  # The five below are clear of all of that on every S3-DevKitC-1 variant.
+  pin_endstop_closed: GPIO4
+  pin_endstop_open: GPIO5
+  pin_relay: GPIO6
+  pin_button: GPIO7
+  pin_status_led: GPIO15
 
   # --- Endstop polarity ---------------------------------------------------
   # Set independently: the two reeds may be different parts, and MC-38-class
@@ -44,13 +46,17 @@ substitutions:
   # --- Optional BLE proxy ----------------------------------------------------
   ble_proxy_enabled: "true"
 
+  # --- OTA TLS ---------------------------------------------------------------
+  # See the comment in packages/core.yaml before changing this.
+  ota_verify_ssl: "false"
+
   # --- Network ---------------------------------------------------------------
   # Remote packages cannot use !secret, so these are substitutions.
   wifi_ssid: "REPLACE_ME"
   wifi_password: "REPLACE_ME"
 
   # --- Build / OTA -------------------------------------------------------------
-  flash_size: 8MB
+  flash_size: 16MB   # N16R8. Set 8MB if you bought an N8R8.
   project_version: "2026.8.1"
   ota_update_url: "https://cgnschris.github.io/esphome-garage-door/manifest.json"
 
@@ -64,6 +70,8 @@ packages:
   core: !include packages/core.yaml
   io: !include packages/io.yaml
   state_machine: !include packages/state-machine.yaml
+  # Delete the next line if your board has no PSRAM (a plain N8/N16 part).
+  psram: !include packages/psram.yaml
   diagnostics: !include packages/diagnostics.yaml
   # Tier 3 — disposable. Delete or comment this single line to drop the BLE
   # proxy entirely, or set ble_proxy_enabled: "false" to keep it flashed but idle.

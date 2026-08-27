@@ -1,0 +1,16 @@
+# psram.yaml — OPTIONAL, board-dependent.
+#
+# This is the main reason the design targets the S3 over the C6: the C6 has no
+# PSRAM support at all, and the BLE proxy plus WiFi plus API plus web server is
+# heap-hungry. Nothing in Tier 1 needs it.
+#
+# mode MUST match the board you actually bought:
+#   N16R8 / N8R8  -> octal  (recommended; these are the "R8" boards)
+#   N8R2          -> quad
+#   N8 / N16      -> NO PSRAM. Delete the psram: line from garage-door.yaml.
+#
+# Getting this wrong is a boot-time failure, not a warning. Check the marking
+# on the module can itself (ESP32-S3-WROOM-1-N8R8), not the seller's title.
+psram:
+  mode: octal
+  speed: 80MHz

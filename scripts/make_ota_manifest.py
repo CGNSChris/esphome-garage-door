@@ -34,7 +34,7 @@ def main() -> None:
         "version": version,
         "builds": [
             {
-                "chipFamily": "ESP32-C6",
+                "chipFamily": "ESP32-S3",
                 "ota": {
                     "md5": hashlib.md5(ota.read_bytes()).hexdigest(),
                     "path": f"firmware/{ota.name}",

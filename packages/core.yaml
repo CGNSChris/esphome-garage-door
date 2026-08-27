@@ -11,11 +11,11 @@ esphome:
     version: ${project_version}
 
 esp32:
-  board: esp32-c6-devkitc-1
-  variant: esp32c6
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
   flash_size: ${flash_size}
   framework:
-    type: esp-idf   # Arduino is not usable on the C6
+    type: esp-idf   # the S3 also supports Arduino; esp-idf is the better base here
 
 logger:
 
@@ -45,13 +45,19 @@ web_server:
   port: 80
 
 http_request:
-  # verify_ssl is deliberately off (upstream W9, kept on purpose):
-  # TLS certificate validation costs heap the C6 needs during the OTA
-  # download, and firmware integrity is gated by the manifest MD5, not by
-  # transport security. This is acceptable ONLY because we control the
-  # manifest source (this repo's GitHub Pages). Do not point ota_update_url
-  # at anything you do not control.
-  verify_ssl: false
+  # Upstream ran with verify_ssl off (their W9) because TLS certificate
+  # validation costs heap the C6 needed during the OTA download. Firmware
+  # integrity is gated by the manifest MD5 rather than by transport security,
+  # which is acceptable ONLY because we control the manifest source (this
+  # repo's GitHub Pages). Never point ota_update_url at anything you do not
+  # control.
+  #
+  # On the S3 with PSRAM that heap argument is much weaker, so this is now a
+  # substitution rather than a hard-coded false: set ota_verify_ssl: "true"
+  # in garage-door.yaml once you can watch a real OTA complete on the bench.
+  # Untested here — a failed TLS handshake breaks OTA silently, and the MD5
+  # gate already covers integrity, so it ships off until proven on hardware.
+  verify_ssl: ${ota_verify_ssl}
 
 update:
   - platform: http_request

@@ -1,6 +1,6 @@
 # esphome-garage-door
 
-Self-hosted ESPHome firmware for an **ESP32-C6** garage door controller with
+Self-hosted ESPHome firmware for an **ESP32-S3** garage door controller with
 **two endstop sensors** and a real state machine. A fork-in-spirit of Athom's
 `athom-garage-door.yaml`, rebuilt to remove its weaknesses:
 
@@ -28,12 +28,14 @@ Self-hosted ESPHome firmware for an **ESP32-C6** garage door controller with
 
 ## Hardware
 
-ESP32-C6-DevKitC-1 (8 MB), opto-isolated 3 V relay module, two reed switches,
-**mandatory 10 kΩ pull-down on the relay GPIO**.
+**ESP32-S3-DevKitC-1-N16R8** (16 MB flash, 8 MB octal PSRAM), opto-isolated
+3 V relay module, two reed switches, **mandatory 10 kΩ pull-down on the relay
+GPIO**.
 
 ![Wiring diagram](docs/wiring.svg)
 
 Full pin map, polarity check and component notes: [docs/wiring.md](docs/wiring.md).
+What to order and why this part: [docs/bom.md](docs/bom.md).
 
 ## Install
 
@@ -85,10 +87,17 @@ and publishes to GitHub Pages:
   (served from Pages, not Releases, because Releases redirects overflow the
   http_request buffer)
 
-`verify_ssl: false` is deliberate and documented inline in
-`packages/core.yaml`: integrity is gated by the manifest MD5, and the
-manifest source is this repo. Do not point `ota_update_url` at anything you
-do not control.
+TLS verification ships **off** (`ota_verify_ssl: "false"`) and is documented
+inline in `packages/core.yaml`: firmware integrity is gated by the manifest
+MD5, not by transport security, which is acceptable only because the manifest
+source is this repo. Do not point `ota_update_url` at anything you do not
+control.
+
+It is a substitution rather than a hard-coded value because the original
+reason for disabling it — TLS validation costing heap the C6 didn't have — is
+much weaker on an S3 with PSRAM. Flip it to `"true"` once you can watch a real
+OTA complete on the bench; it ships off because a failed handshake breaks OTA
+silently and it has not been tested on hardware.
 
 **Repo setup:** Settings → Pages → Source = *GitHub Actions*.
 

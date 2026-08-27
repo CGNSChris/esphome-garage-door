@@ -1,20 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 800" width="940" height="800" role="img" aria-labelledby="svgtitle svgdesc">
-  <title id="svgtitle">ESP32-C6 garage door controller wiring</title>
-  <desc id="svgdesc">Two reed endstops and a wall button connect to GPIO18, GPIO19 and GPIO3 with internal pull-ups, switching to a common ground. GPIO7 drives an opto-isolated relay module and carries a mandatory 10 kilohm pull-down to ground. The relay's dry contacts wire in parallel with the garage opener's existing wall-button terminals. GPIO2 drives a status LED through a 1 kilohm resistor.</desc>
+  <title id="svgtitle">ESP32-S3 garage door controller wiring</title>
+  <desc id="svgdesc">Two reed endstops and a wall button connect to GPIO4, GPIO5 and GPIO7 with internal pull-ups, switching to a common ground. GPIO6 drives an opto-isolated relay module and carries a mandatory 10 kilohm pull-down to ground. The relay's dry contacts wire in parallel with the garage opener's existing wall-button terminals. GPIO15 drives a status LED through a 1 kilohm resistor.</desc>
 
   <rect x="0" y="0" width="940" height="800" fill="#ffffff"/>
   <rect x="0.5" y="0.5" width="939" height="799" fill="none" stroke="#dddddd"/>
 
   <g font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" fill="#1a1a1a">
 
-    <text x="40" y="44" font-size="20" font-weight="700">ESP32-C6 Garage Door Controller &#8212; Wiring</text>
+    <text x="40" y="44" font-size="20" font-weight="700">ESP32-S3 Garage Door Controller &#8212; Wiring</text>
     <text x="40" y="66" font-size="12" fill="#555555">Default pin assignments from garage-door.yaml. These are GPIO numbers, not header positions &#8212; check your board's silkscreen.</text>
 
     <!-- ============ MCU ============ -->
     <rect x="400" y="130" width="180" height="370" rx="6" fill="#f2f2f0" stroke="#1a1a1a" stroke-width="2"/>
-    <text x="490" y="300" font-size="18" font-weight="700" text-anchor="middle">ESP32-C6</text>
-    <text x="490" y="322" font-size="12" fill="#555555" text-anchor="middle">DevKitC-1</text>
-    <text x="490" y="340" font-size="11" fill="#555555" text-anchor="middle">8 MB flash &#183; esp-idf</text>
+    <text x="490" y="300" font-size="18" font-weight="700" text-anchor="middle">ESP32-S3</text>
+    <text x="490" y="322" font-size="12" fill="#555555" text-anchor="middle">DevKitC-1 &#183; N16R8</text>
+    <text x="490" y="340" font-size="11" fill="#555555" text-anchor="middle">16 MB flash &#183; 8 MB PSRAM</text>
 
     <!-- USB power in -->
     <line x1="490" y1="92" x2="490" y2="126" stroke="#1a1a1a" stroke-width="2" marker-end="url(#arrow)"/>
@@ -29,7 +29,7 @@
     <text x="170" y="166" font-size="12" font-weight="700" text-anchor="middle">Reed &#8212; CLOSED</text>
     <text x="170" y="183" font-size="10" fill="#555555" text-anchor="middle">MC-38 + magnet on door</text>
     <line x1="250" y1="170" x2="400" y2="170" stroke="#1a1a1a" stroke-width="2"/>
-    <text x="325" y="162" font-size="11" font-weight="700" text-anchor="middle">GPIO18</text>
+    <text x="325" y="162" font-size="11" font-weight="700" text-anchor="middle">GPIO4</text>
     <line x1="90" y1="170" x2="50" y2="170" stroke="#1a1a1a" stroke-width="2"/>
 
     <!-- reed: open endstop -->
@@ -37,7 +37,7 @@
     <text x="170" y="246" font-size="12" font-weight="700" text-anchor="middle">Reed &#8212; OPEN</text>
     <text x="170" y="263" font-size="10" fill="#555555" text-anchor="middle">MC-38 + magnet on track</text>
     <line x1="250" y1="250" x2="400" y2="250" stroke="#1a1a1a" stroke-width="2"/>
-    <text x="325" y="242" font-size="11" font-weight="700" text-anchor="middle">GPIO19</text>
+    <text x="325" y="242" font-size="11" font-weight="700" text-anchor="middle">GPIO5</text>
     <line x1="90" y1="250" x2="50" y2="250" stroke="#1a1a1a" stroke-width="2"/>
     <circle cx="50" cy="250" r="4" fill="#1a1a1a"/>
 
@@ -46,7 +46,7 @@
     <text x="170" y="326" font-size="12" font-weight="700" text-anchor="middle">Wall button</text>
     <text x="170" y="343" font-size="10" fill="#555555" text-anchor="middle">momentary, N/O</text>
     <line x1="250" y1="330" x2="400" y2="330" stroke="#1a1a1a" stroke-width="2"/>
-    <text x="325" y="322" font-size="11" font-weight="700" text-anchor="middle">GPIO3</text>
+    <text x="325" y="322" font-size="11" font-weight="700" text-anchor="middle">GPIO7</text>
     <line x1="90" y1="330" x2="50" y2="330" stroke="#1a1a1a" stroke-width="2"/>
     <circle cx="50" cy="330" r="4" fill="#1a1a1a"/>
 
@@ -54,7 +54,7 @@
 
     <!-- status LED branch -->
     <line x1="400" y1="410" x2="330" y2="410" stroke="#1a1a1a" stroke-width="2"/>
-    <text x="365" y="402" font-size="11" font-weight="700" text-anchor="middle">GPIO2</text>
+    <text x="365" y="402" font-size="11" font-weight="700" text-anchor="middle">GPIO15</text>
     <rect x="280" y="400" width="50" height="20" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
     <text x="305" y="437" font-size="10" fill="#555555" text-anchor="middle">1 k&#8486;</text>
     <line x1="280" y1="410" x2="250" y2="410" stroke="#1a1a1a" stroke-width="2"/>
@@ -74,7 +74,7 @@
     <text x="700" y="224" font-size="10" font-weight="700">VCC</text>
 
     <line x1="580" y1="270" x2="690" y2="270" stroke="#1a1a1a" stroke-width="2"/>
-    <text x="655" y="262" font-size="11" font-weight="700" text-anchor="middle">GPIO7</text>
+    <text x="655" y="262" font-size="11" font-weight="700" text-anchor="middle">GPIO6</text>
     <text x="700" y="274" font-size="10" font-weight="700">IN</text>
 
     <line x1="690" y1="320" x2="660" y2="320" stroke="#1a1a1a" stroke-width="2"/>
@@ -117,7 +117,7 @@
     <!-- ============ notes ============ -->
     <line x1="40" y1="716" x2="900" y2="716" stroke="#dddddd" stroke-width="1"/>
     <text x="40" y="734" font-size="10" fill="#c0392b" font-weight="700">The 10 k&#8486; pull-down is not optional &#8212; the relay GPIO floats between power-on and firmware boot, and a floating relay input can latch on.</text>
-    <text x="40" y="752" font-size="10" fill="#555555">Never assign GPIO12 / GPIO13: they are the C6's native USB-Serial-JTAG D&#8722; / D+ pins. Avoid GPIO4, 5, 8, 9 and 15 &#8212; strapping pins.</text>
+    <text x="40" y="752" font-size="10" fill="#555555">Never assign GPIO19 / GPIO20 (native USB D&#8722; / D+) or GPIO26&#8211;32 (SPI flash). On octal-PSRAM boards GPIO33&#8211;37 are taken too. Avoid GPIO0, 3, 45, 46 &#8212; strapping pins.</text>
     <text x="40" y="770" font-size="10" fill="#1f6feb">Blue = opener-side circuit, galvanically isolated from the ESP32 by the relay's optocoupler. It shares no ground with the controller.</text>
   </g>
 
