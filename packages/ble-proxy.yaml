@@ -1,0 +1,30 @@
+# ble-proxy.yaml — OPTIONAL. Tier 3: the first thing to degrade, the last
+# thing to be given resources. Nothing in the door logic depends on this file;
+# delete its line from garage-door.yaml to drop it entirely.
+
+esp32_ble_tracker:
+  scan_parameters:
+    # window 30ms in interval 320ms ≈ 9% receive duty cycle.
+    # Athom shipped window 300ms ≈ 94% (upstream W8), which starves WiFi on a
+    # single-core part with one shared 2.4 GHz radio and time-division
+    # coexistence. The cost is only slightly slower BLE device discovery.
+    interval: 320ms
+    window: 30ms
+    active: true
+    continuous: false   # scanning is gated on an actual API connection below
+
+bluetooth_proxy:
+  active: true
+
+api:
+  # Athom's genuinely good idea, kept: only scan while Home Assistant is
+  # actually connected to consume the results.
+  on_client_connected:
+    - if:
+        condition:
+          lambda: 'return std::string("${ble_proxy_enabled}") == std::string("true");'
+        then:
+          - esp32_ble_tracker.start_scan:
+              continuous: true
+  on_client_disconnected:
+    - esp32_ble_tracker.stop_scan:

@@ -1,0 +1,425 @@
+# state-machine.yaml — the core deliverable. Tier 1: no dependency on WiFi,
+# the API, Home Assistant, or DNS anywhere in this file.
+#
+# Internal states (global door_state):
+#   0 CLOSED           closed endstop active, open endstop inactive
+#   1 OPEN             open endstop active, closed endstop inactive
+#   2 OPENING          neither active, travelling toward open
+#   3 CLOSING          neither active, travelling toward closed
+#   4 STOPPED_PARTIAL  neither active, not travelling
+#   5 FAULT_TIMEOUT    travel exceeded the timeout; position unknown
+#   6 FAULT_SENSOR     both endstops active — physically impossible, so a
+#                      wiring or sensor failure; surfaced, never auto-resolved
+#   7 UNKNOWN          boot with neither endstop active; nothing published to
+#                      the cover until an endstop is seen
+#
+# Commands (handle_command cmd): 0 open, 1 close, 2 stop
+#
+# Why not the built-in `endstop` or `feedback` cover platforms: see README.
+# Short version — `endstop` fires stop_action on arrival, which on a
+# one-button opener presses the button again and reverses the door.
+
+esphome:
+  on_boot:
+    priority: -100
+    then:
+      # Small settle delay so the debounced endstop inputs have real values.
+      - delay: 500ms
+      - lambda: |-
+          bool c = id(endstop_closed).state;
+          bool o = id(endstop_open).state;
+          if (c && o) {
+            id(transition_to).execute(6);            // FAULT_SENSOR
+          } else if (c) {
+            id(transition_to).execute(0);            // CLOSED
+          } else if (o) {
+            id(transition_to).execute(1);            // OPEN
+          } else {
+            // Position is genuinely unknown. Publish the internal state and
+            // fault entities, but never a cover state — and never guess CLOSED.
+            id(door_state) = 7;
+            id(publish_all).execute();
+          }
+      # W6 belt-and-braces alongside the hardware pull-down: no relay
+      # actuation of any kind in the first 3 s after boot.
+      - delay: 2500ms
+      - lambda: |-
+          id(boot_grace) = true;
+          ESP_LOGI("door", "Boot grace period over; relay commands now accepted");
+
+globals:
+  - id: door_state
+    type: int
+    restore_value: false
+    initial_value: '7'
+  # 0 unknown, 1 last travelled opening, 2 last travelled closing.
+  # Needed for stop_then_reverse pulse counts from STOPPED_PARTIAL.
+  - id: last_dir
+    type: int
+    restore_value: false
+    initial_value: '0'
+  - id: position_est
+    type: float
+    restore_value: false
+    initial_value: '0.0'
+  - id: pos_valid
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: boot_grace
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+script:
+  # ---------------------------------------------------------------- outputs --
+  - id: publish_all
+    mode: single
+    then:
+      - lambda: |-
+          static const char *NAMES[] = {"CLOSED", "OPEN", "OPENING", "CLOSING",
+                                        "STOPPED_PARTIAL", "FAULT_TIMEOUT",
+                                        "FAULT_SENSOR", "UNKNOWN"};
+          const int s = id(door_state);
+          id(door_state_text).publish_state(NAMES[s]);
+          id(fault_bin).publish_state(s == 5 || s == 6);
+          auto *cov = id(garage_cover);
+          if (s == 0) {
+            cov->position = 0.0f;
+            cov->current_operation = esphome::cover::COVER_OPERATION_IDLE;
+            cov->publish_state();
+          } else if (s == 1) {
+            cov->position = 1.0f;
+            cov->current_operation = esphome::cover::COVER_OPERATION_IDLE;
+            cov->publish_state();
+          } else if (s == 2 || s == 3) {
+            if (id(pos_valid)) {
+              cov->position = id(position_est);
+              cov->current_operation = (s == 2)
+                  ? esphome::cover::COVER_OPERATION_OPENING
+                  : esphome::cover::COVER_OPERATION_CLOSING;
+              cov->publish_state();
+            }
+            // pos invalid: travelling from an unknown start — the text sensor
+            // carries the state; the cover stays unpublished rather than lie.
+          } else {
+            // STOPPED_PARTIAL / faults / UNKNOWN
+            if (id(pos_valid)) {
+              cov->position = id(position_est);
+              cov->current_operation = esphome::cover::COVER_OPERATION_IDLE;
+              cov->publish_state();
+            }
+          }
+
+  # ------------------------------------------------------------- transitions --
+  - id: transition_to
+    mode: single
+    parameters:
+      ns: int
+    then:
+      - lambda: |-
+          static const char *NAMES[] = {"CLOSED", "OPEN", "OPENING", "CLOSING",
+                                        "STOPPED_PARTIAL", "FAULT_TIMEOUT",
+                                        "FAULT_SENSOR", "UNKNOWN"};
+          const int prev = id(door_state);
+          id(door_state) = ns;
+          if (ns == 2 || ns == 3) {
+            id(last_dir) = (ns == 2) ? 1 : 2;
+            id(travel_timer).stop();
+            id(travel_timer).execute();
+          } else {
+            id(travel_timer).stop();
+          }
+          if (ns == 0) { id(position_est) = 0.0f; id(pos_valid) = true; }
+          if (ns == 1) { id(position_est) = 1.0f; id(pos_valid) = true; }
+          if (prev != ns)
+            ESP_LOGI("door", "State: %s -> %s", NAMES[prev], NAMES[ns]);
+          id(publish_all).execute();
+
+  # ------------------------------------------------------------- travel timer --
+  # mode: restart gives cancel-and-restart for free; script.stop cancels
+  # outright when an endstop is reached. Do not hand-roll this in a lambda.
+  - id: travel_timer
+    mode: restart
+    then:
+      - delay: !lambda |-
+          return (uint32_t) (std::max((float) ${open_duration},
+                                      (float) ${close_duration})
+                             * (float) ${travel_timeout_factor} * 1000.0f);
+      - lambda: |-
+          const int s = id(door_state);
+          if (s == 2 || s == 3) {
+            ESP_LOGE("door", "Travel timeout with no endstop — jammed or "
+                             "obstructed. Position unknown. FAULT_TIMEOUT.");
+            id(transition_to).execute(5);
+          }
+
+  # ------------------------------------------------------------------ relay --
+  - id: pulse_relay
+    mode: single   # never queue pulses; handle_command refuses while running
+    parameters:
+      pulses: int
+    then:
+      - if:
+          condition:
+            # W6: even if something reaches this script during the boot
+            # grace window, the relay stays untouched.
+            lambda: 'return id(boot_grace);'
+          then:
+            - repeat:
+                count: !lambda 'return pulses;'
+                then:
+                  - switch.turn_on: relay_output
+                  - delay: ${relay_pulse_width}
+                  - switch.turn_off: relay_output
+                  - delay: ${inter_pulse_gap}
+
+  # ---------------------------------------------------------------- commands --
+  # One-button opener semantics (docs/opener-compatibility.md):
+  #   Type A (reverse):           press while moving reverses.
+  #   Type B (stop_then_reverse): press while moving stops; from stopped, the
+  #     next press moves OPPOSITE to the last travel direction (the classic
+  #     open-stop-close-stop-open cycle).
+  # Pulse counts follow from that cycle:
+  #   moving -> opposite direction : A=1, B=2 (stop, then go)
+  #   stopped -> opposite of last  : 1
+  #   stopped -> same as last      : A=1, B=3 (wrong way, stop, right way).
+  #     NOTE: the handover table said 2 here, but two presses on a Type B
+  #     opener from stopped end with the door STOPPED (move-wrong-way, stop),
+  #     not moving in the requested direction. Three presses complete the
+  #     cycle. The brief wrong-direction nudge is inherent to Type B openers.
+  - id: handle_command
+    mode: single
+    parameters:
+      cmd: int
+    then:
+      - lambda: |-
+          if (!id(boot_grace)) {
+            ESP_LOGW("door", "Command refused: boot grace period");
+            return;
+          }
+          if (id(pulse_relay).is_running()) {
+            ESP_LOGW("door", "Command refused: pulse sequence in progress");
+            return;
+          }
+          // Sensor sanity beats everything else (evaluated first, any state).
+          if (id(endstop_closed).state && id(endstop_open).state) {
+            id(transition_to).execute(6);
+            return;
+          }
+          const int s = id(door_state);
+          if (s == 5 || s == 6) {
+            // Never retry into a jam — that is how openers and doors get
+            // damaged. Faults are cleared explicitly via the Clear Fault button.
+            ESP_LOGW("door", "Command refused: in FAULT, clear it first");
+            return;
+          }
+          const bool type_b =
+              std::string("${opener_cycle_mode}") == std::string("stop_then_reverse");
+
+          if (cmd == 0) {                    // ------------------------- open
+            if (s == 1 || s == 2) return;    // already open / opening: no-op
+            if (s == 0) {                    // CLOSED -> OPENING
+              id(pulse_relay).execute(1);
+              id(transition_to).execute(2);
+            } else if (s == 3) {             // CLOSING -> OPENING
+              id(pulse_relay).execute(type_b ? 2 : 1);
+              id(transition_to).execute(2);
+            } else {                         // STOPPED_PARTIAL / UNKNOWN
+              int n = 1;
+              if (type_b && id(last_dir) == 1) n = 3;
+              if (id(last_dir) == 0)
+                ESP_LOGW("door", "Direction after stop unknown; sending 1 pulse "
+                                 "and trusting the endstops to correct me");
+              id(pulse_relay).execute(n);
+              id(transition_to).execute(2);
+            }
+          } else if (cmd == 1) {             // ------------------------ close
+            if (s == 0 || s == 3) return;    // already closed / closing: no-op
+            if (s == 1) {                    // OPEN -> CLOSING
+              id(pulse_relay).execute(1);
+              id(transition_to).execute(3);
+            } else if (s == 2) {             // OPENING -> CLOSING
+              id(pulse_relay).execute(type_b ? 2 : 1);
+              id(transition_to).execute(3);
+            } else {                         // STOPPED_PARTIAL / UNKNOWN
+              int n = 1;
+              if (type_b && id(last_dir) == 2) n = 3;
+              if (id(last_dir) == 0)
+                ESP_LOGW("door", "Direction after stop unknown; sending 1 pulse "
+                                 "and trusting the endstops to correct me");
+              id(pulse_relay).execute(n);
+              id(transition_to).execute(3);
+            }
+          } else {                           // ------------------------- stop
+            // Only meaningful while moving (upstream W7: Athom pulsed the
+            // relay unconditionally on stop, which REVERSES many openers).
+            if (s == 2 || s == 3) {
+              id(pulse_relay).execute(1);    // 1 pulse stops on both types
+              id(transition_to).execute(4);
+            }
+          }
+
+  # ---------------------------------------------------------- endstop events --
+  - id: on_closed_endstop_active
+    mode: single
+    then:
+      - lambda: |-
+          if (id(endstop_open).state) {      // both active: impossible
+            id(transition_to).execute(6);
+            return;
+          }
+          const int s = id(door_state);
+          if (s == 2)
+            ESP_LOGW("door", "Closed endstop hit while OPENING — the opener "
+                             "auto-reversed (obstruction detection?)");
+          if (s == 5 || s == 6)
+            ESP_LOGI("door", "Endstop seen; clearing fault");
+          id(transition_to).execute(0);      // any state: adopt CLOSED
+
+  - id: on_closed_endstop_release
+    mode: single
+    then:
+      - lambda: |-
+          const int s = id(door_state);
+          if (s == 0) {
+            // No command from us, but the door left the closed switch:
+            // handset or opener wall button. From closed it can only be opening.
+            ESP_LOGI("door", "Left closed endstop with no command — external "
+                             "control, assuming OPENING");
+            id(transition_to).execute(2);
+          } else if (s == 6 && id(endstop_open).state) {
+            // Both-active fault resolving itself: the closed reed released
+            // while the open reed is still active — adopt OPEN.
+            id(transition_to).execute(1);
+          }
+
+  - id: on_open_endstop_active
+    mode: single
+    then:
+      - lambda: |-
+          if (id(endstop_closed).state) {
+            id(transition_to).execute(6);
+            return;
+          }
+          const int s = id(door_state);
+          if (s == 3)
+            ESP_LOGW("door", "Open endstop hit while CLOSING — the opener "
+                             "auto-reversed (obstruction detection). This is "
+                             "the safety case, handled, not impossible.");
+          if (s == 5 || s == 6)
+            ESP_LOGI("door", "Endstop seen; clearing fault");
+          id(transition_to).execute(1);      // any state: adopt OPEN
+
+  - id: on_open_endstop_release
+    mode: single
+    then:
+      - lambda: |-
+          const int s = id(door_state);
+          if (s == 1) {
+            ESP_LOGI("door", "Left open endstop with no command — external "
+                             "control, assuming CLOSING");
+            id(transition_to).execute(3);
+          } else if (s == 6 && id(endstop_closed).state) {
+            id(transition_to).execute(0);
+          }
+
+  # ------------------------------------------------------------ local button --
+  # Tier 1: works with the network down. Stop if moving; otherwise toggle.
+  - id: on_local_button
+    mode: single
+    then:
+      - lambda: |-
+          const int s = id(door_state);
+          if (s == 5 || s == 6) {
+            ESP_LOGW("door", "Button press refused: in FAULT");
+            return;
+          }
+          if (s == 2 || s == 3)      id(handle_command).execute(2);  // stop
+          else if (s == 0)           id(handle_command).execute(0);  // open
+          else if (s == 1)           id(handle_command).execute(1);  // close
+          else                       id(handle_command).execute(0);  // stopped/unknown -> open
+
+# -------------------------------------------------------------------- cover --
+cover:
+  - platform: template
+    # name: None -> the cover takes the device's friendly name; it is THE entity.
+    name: None
+    id: garage_cover
+    device_class: garage
+    has_position: true
+    optimistic: false
+    assumed_state: false
+    open_action:
+      - script.execute:
+          id: handle_command
+          cmd: 0
+    close_action:
+      - script.execute:
+          id: handle_command
+          cmd: 1
+    stop_action:
+      - script.execute:
+          id: handle_command
+          cmd: 2
+
+# ------------------------------------------------- position interpolation --
+# Between endstops the position is an ESTIMATE from elapsed travel time.
+# It snaps to exactly 0.0 / 1.0 whenever an endstop fires (in transition_to),
+# so drift can never accumulate across cycles.
+interval:
+  - interval: 1s
+    then:
+      - lambda: |-
+          const int s = id(door_state);
+          if ((s == 2 || s == 3) && id(pos_valid)) {
+            const float step = (s == 2) ? (1.0f / (float) ${open_duration})
+                                        : (-1.0f / (float) ${close_duration});
+            float p = id(position_est) + step;
+            if (p > 0.99f) p = 0.99f;   // only an endstop may claim 1.0
+            if (p < 0.01f) p = 0.01f;   // only an endstop may claim 0.0
+            id(position_est) = p;
+            auto *cov = id(garage_cover);
+            cov->position = p;
+            cov->current_operation = (s == 2)
+                ? esphome::cover::COVER_OPERATION_OPENING
+                : esphome::cover::COVER_OPERATION_CLOSING;
+            cov->publish_state();
+          }
+
+# ------------------------------------------------------------ fault entities --
+# HA needs the fault visible as its own entity; burying it in the cover is
+# not enough.
+binary_sensor:
+  - platform: template
+    name: Fault
+    id: fault_bin
+    device_class: problem
+
+text_sensor:
+  - platform: template
+    name: Door State
+    id: door_state_text
+    icon: mdi:state-machine
+    update_interval: never
+
+button:
+  - platform: template
+    name: Clear Fault
+    entity_category: config
+    icon: mdi:alert-remove
+    on_press:
+      - lambda: |-
+          const int s = id(door_state);
+          if (s != 5 && s != 6) return;
+          if (id(endstop_closed).state && id(endstop_open).state) {
+            ESP_LOGE("door", "Cannot clear: both endstops still active — fix "
+                             "the wiring or sensors first");
+            id(transition_to).execute(6);
+            return;
+          }
+          ESP_LOGW("door", "Fault cleared manually; position unknown until an "
+                           "endstop is seen");
+          id(pos_valid) = false;
+          id(last_dir) = 0;
+          id(transition_to).execute(4);

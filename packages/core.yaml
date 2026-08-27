@@ -1,0 +1,60 @@
+# core.yaml — esphome:, esp32:, network, OTA, web server.
+# Tier 2 lives here. Nothing in this file may be a dependency of the state
+# machine or the relay path (Tier 1).
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  min_version: 2026.7.0
+  project:
+    name: cgnschris.esphome-garage-door
+    version: ${project_version}
+
+esp32:
+  board: esp32-c6-devkitc-1
+  variant: esp32c6
+  flash_size: ${flash_size}
+  framework:
+    type: esp-idf   # Arduino is not usable on the C6
+
+logger:
+
+api:
+  # Tier 1 rule: the door must work with the network down. Never reboot just
+  # because Home Assistant is unreachable — a reboot mid-travel loses state.
+  reboot_timeout: 0s
+
+ota:
+  - platform: esphome
+  - platform: http_request   # consumed by the update: component below
+
+safe_mode:
+
+wifi:
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
+  # Tier 1: never reboot on WiFi loss. The local button and state machine
+  # keep working regardless of network state.
+  reboot_timeout: 0s
+  ap:
+    ssid: "${name} setup"
+
+captive_portal:
+
+web_server:
+  port: 80
+
+http_request:
+  # verify_ssl is deliberately off (upstream W9, kept on purpose):
+  # TLS certificate validation costs heap the C6 needs during the OTA
+  # download, and firmware integrity is gated by the manifest MD5, not by
+  # transport security. This is acceptable ONLY because we control the
+  # manifest source (this repo's GitHub Pages). Do not point ota_update_url
+  # at anything you do not control.
+  verify_ssl: false
+
+update:
+  - platform: http_request
+    name: Firmware
+    source: ${ota_update_url}
+    update_interval: 6h

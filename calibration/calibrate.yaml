@@ -1,0 +1,143 @@
+# calibrate.yaml — TEMPORARY standalone config for measuring travel durations
+# and determining the opener's cycle type. Flash this, run the procedure in
+# docs/calibration.md, write the numbers into garage-door.yaml's
+# substitutions, then flash the real firmware.
+#
+# It has no state machine on purpose: it pulses the relay when you press the
+# HA button and reports the time between leaving one endstop and reaching the
+# other. Nothing here protects you from double-presses — that is the point.
+
+substitutions:
+  name: garage-door-cal
+  friendly_name: Garage Door Calibration
+
+  pin_endstop_closed: GPIO18
+  pin_endstop_open: GPIO19
+  pin_relay: GPIO7
+
+  endstop_closed_inverted: "false"
+  endstop_open_inverted: "false"
+  relay_pulse_width: 500ms
+
+  wifi_ssid: "REPLACE_ME"
+  wifi_password: "REPLACE_ME"
+
+  flash_size: 8MB
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  min_version: 2026.7.0
+
+esp32:
+  board: esp32-c6-devkitc-1
+  variant: esp32c6
+  flash_size: ${flash_size}
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+  reboot_timeout: 0s
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
+  reboot_timeout: 0s
+  ap:
+    ssid: "${name} setup"
+
+captive_portal:
+
+web_server:
+  port: 80
+
+globals:
+  - id: t_left_closed
+    type: uint32_t
+    initial_value: '0'
+  - id: t_left_open
+    type: uint32_t
+    initial_value: '0'
+
+binary_sensor:
+  - platform: gpio
+    id: endstop_closed
+    name: Closed Endstop
+    pin:
+      number: ${pin_endstop_closed}
+      inverted: ${endstop_closed_inverted}
+      mode:
+        input: true
+        pullup: true
+    filters:
+      - delayed_on_off: 50ms
+    on_release:
+      - lambda: 'id(t_left_closed) = millis();'
+    on_press:
+      - lambda: |-
+          if (id(t_left_open) != 0) {
+            const float secs = (millis() - id(t_left_open)) / 1000.0f;
+            ESP_LOGI("cal", "CLOSE travel: %.1f s", secs);
+            id(last_close_duration).publish_state(secs);
+            id(t_left_open) = 0;
+          }
+
+  - platform: gpio
+    id: endstop_open
+    name: Open Endstop
+    pin:
+      number: ${pin_endstop_open}
+      inverted: ${endstop_open_inverted}
+      mode:
+        input: true
+        pullup: true
+    filters:
+      - delayed_on_off: 50ms
+    on_release:
+      - lambda: 'id(t_left_open) = millis();'
+    on_press:
+      - lambda: |-
+          if (id(t_left_closed) != 0) {
+            const float secs = (millis() - id(t_left_closed)) / 1000.0f;
+            ESP_LOGI("cal", "OPEN travel: %.1f s", secs);
+            id(last_open_duration).publish_state(secs);
+            id(t_left_closed) = 0;
+          }
+
+switch:
+  - platform: gpio
+    id: relay_output
+    internal: true
+    restore_mode: ALWAYS_OFF
+    pin:
+      number: ${pin_relay}
+
+button:
+  - platform: template
+    name: Pulse Relay
+    icon: mdi:gesture-tap-button
+    on_press:
+      - switch.turn_on: relay_output
+      - delay: ${relay_pulse_width}
+      - switch.turn_off: relay_output
+
+sensor:
+  - platform: template
+    name: Last Open Duration
+    id: last_open_duration
+    unit_of_measurement: s
+    accuracy_decimals: 1
+    icon: mdi:timer-outline
+    update_interval: never
+  - platform: template
+    name: Last Close Duration
+    id: last_close_duration
+    unit_of_measurement: s
+    accuracy_decimals: 1
+    icon: mdi:timer-outline
+    update_interval: never

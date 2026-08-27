@@ -1,0 +1,61 @@
+name: Build firmware
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ESPHome firmware
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pinned to a full immutable tag on purpose: build-action releases are
+      # immutable and there are no floating major tags (@v8 will not resolve).
+      # v8.0.0 requires ESPHome >= 2026.7.0.
+      - uses: esphome/build-action@v8.0.0
+        id: esphome-build
+        with:
+          yaml-file: garage-door.yaml
+          version: latest
+          complete-manifest: true
+
+      - name: Assemble Pages site
+        env:
+          BUILD_DIR: ${{ steps.esphome-build.outputs.name }}
+          FW_VERSION: ${{ steps.esphome-build.outputs.project-version }}
+        run: |
+          mkdir -p site/firmware
+          cp -r "$BUILD_DIR"/. site/firmware/
+          # OTA manifest for ESPHome's `update: platform: http_request`.
+          # Served from GitHub Pages, NOT a Releases URL: Releases redirect to
+          # long signed URLs that overflow the http_request component's
+          # 512-byte buffer ("Out of buffer").
+          python3 scripts/make_ota_manifest.py site "$FW_VERSION"
+          cp static/index.html site/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

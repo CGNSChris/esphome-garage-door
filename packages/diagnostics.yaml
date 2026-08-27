@@ -1,0 +1,36 @@
+# diagnostics.yaml — Tier 2 visibility. Nothing here is load-bearing.
+
+button:
+  - platform: restart
+    name: Restart
+    entity_category: config
+  # Upstream W10: Athom put factory reset on a 4-second hold of the SAME
+  # button that operates the door. Here it is an HA config entity only —
+  # never a long-press of the control someone pushes to move a garage door.
+  - platform: factory_reset
+    name: Factory Reset
+    entity_category: config
+
+sensor:
+  - platform: uptime
+    name: Uptime
+    entity_category: diagnostic
+  - platform: wifi_signal
+    name: WiFi Signal
+    update_interval: 60s
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: IP Address
+      entity_category: diagnostic
+    ssid:
+      name: Connected SSID
+      entity_category: diagnostic
+    mac_address:
+      name: MAC Address
+      entity_category: diagnostic
+  - platform: version
+    name: ESPHome Version
+    entity_category: diagnostic

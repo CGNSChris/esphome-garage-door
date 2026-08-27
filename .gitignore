@@ -1,0 +1,15 @@
+# ESPHome build state
+.esphome/
+secrets.yaml
+
+# Build artefacts
+*.bin
+*.elf
+site/
+
+# Local reference material (design docs, BOM) — not part of the firmware repo
+reference/
+
+# OS noise
+Thumbs.db
+.DS_Store

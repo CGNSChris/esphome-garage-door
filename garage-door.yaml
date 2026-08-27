@@ -1,0 +1,70 @@
+# ============================================================================
+# Garage Door Controller — adoptable entry point
+#
+# Every tunable lives in the substitutions below. Never edit files under
+# packages/ — they are the firmware; this file is the configuration.
+#
+# Docs: docs/wiring.md, docs/calibration.md, docs/opener-compatibility.md
+# ============================================================================
+substitutions:
+  name: garage-door
+  friendly_name: Garage Door
+
+  # --- Pins (ESP32-C6) --------------------------------------------------
+  # Never use GPIO12/GPIO13 (native USB-Serial-JTAG D-/D+).
+  # Avoid GPIO4, GPIO5, GPIO8, GPIO9, GPIO15 (strapping pins).
+  pin_endstop_closed: GPIO18
+  pin_endstop_open: GPIO19
+  pin_relay: GPIO7
+  pin_button: GPIO3
+  pin_status_led: GPIO2
+
+  # --- Endstop polarity ---------------------------------------------------
+  # Set independently: the two reeds may be different parts, and MC-38-class
+  # sellers label N/O and N/C inconsistently. "false" = switch closes to GND
+  # when the magnet is present (typical N/O reed wired to GND).
+  endstop_closed_inverted: "false"
+  endstop_open_inverted: "false"
+
+  # --- Opener behaviour (see docs/calibration.md) ---------------------------
+  #   reverse            a press while moving immediately reverses (Type A)
+  #   stop_then_reverse  a press while moving stops; the NEXT press reverses (Type B)
+  # stop_then_reverse is the safe default: an extra pulse on a Type A opener
+  # merely stops the door, whereas a missing pulse on a Type B opener leaves
+  # it moving the wrong way.
+  opener_cycle_mode: stop_then_reverse
+  relay_pulse_width: 500ms
+  inter_pulse_gap: 600ms
+
+  # --- Travel calibration (seconds, measured with a stopwatch) --------------
+  open_duration: "18.0"
+  close_duration: "18.0"
+  travel_timeout_factor: "1.5"
+
+  # --- Optional BLE proxy ----------------------------------------------------
+  ble_proxy_enabled: "true"
+
+  # --- Network ---------------------------------------------------------------
+  # Remote packages cannot use !secret, so these are substitutions.
+  wifi_ssid: "REPLACE_ME"
+  wifi_password: "REPLACE_ME"
+
+  # --- Build / OTA -------------------------------------------------------------
+  flash_size: 8MB
+  project_version: "2026.8.1"
+  ota_update_url: "https://cgnschris.github.io/esphome-garage-door/manifest.json"
+
+# Adoption pulls from THIS fork — never Athom's manifest (their W3 trap:
+# installing from an upstream manifest silently reverts pins and logic).
+dashboard_import:
+  package_import_url: github://CGNSChris/esphome-garage-door/garage-door.yaml@main
+  import_full_config: false
+
+packages:
+  core: !include packages/core.yaml
+  io: !include packages/io.yaml
+  state_machine: !include packages/state-machine.yaml
+  diagnostics: !include packages/diagnostics.yaml
+  # Tier 3 — disposable. Delete or comment this single line to drop the BLE
+  # proxy entirely, or set ble_proxy_enabled: "false" to keep it flashed but idle.
+  ble_proxy: !include packages/ble-proxy.yaml

@@ -1,0 +1,74 @@
+# io.yaml — physical inputs and outputs. Tier 1.
+# All logic lives in state-machine.yaml; this file only wires events to it.
+
+binary_sensor:
+  - platform: gpio
+    id: endstop_closed
+    name: Closed Endstop
+    entity_category: diagnostic
+    pin:
+      number: ${pin_endstop_closed}
+      inverted: ${endstop_closed_inverted}
+      # Explicit pull-up (upstream W5: Athom left the contact input floating
+      # and relied on a board-level pull-up we don't have).
+      mode:
+        input: true
+        pullup: true
+    filters:
+      # Both edges debounced (upstream W7 sibling: Athom debounced one edge
+      # with 20 ms, not enough for a reed on a long alarm-cable run).
+      - delayed_on_off: 50ms
+    on_press:
+      - script.execute: on_closed_endstop_active
+    on_release:
+      - script.execute: on_closed_endstop_release
+
+  - platform: gpio
+    id: endstop_open
+    name: Open Endstop
+    entity_category: diagnostic
+    pin:
+      number: ${pin_endstop_open}
+      inverted: ${endstop_open_inverted}
+      mode:
+        input: true
+        pullup: true
+    filters:
+      - delayed_on_off: 50ms
+    on_press:
+      - script.execute: on_open_endstop_active
+    on_release:
+      - script.execute: on_open_endstop_release
+
+  - platform: gpio
+    id: local_button
+    name: Wall Button
+    entity_category: diagnostic
+    pin:
+      number: ${pin_button}
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    filters:
+      - delayed_on: 30ms
+    on_press:
+      - script.execute: on_local_button
+
+switch:
+  # The raw relay is internal on purpose: nothing may pulse it except the
+  # state machine. Exposing it to HA would bypass every safety rule here.
+  - platform: gpio
+    id: relay_output
+    internal: true
+    restore_mode: ALWAYS_OFF
+    pin:
+      number: ${pin_relay}
+
+# W6 reminder: restore_mode ALWAYS_OFF is firmware-side only. The GPIO still
+# floats between power-on and boot, so the 10 kΩ hardware pull-down on the
+# relay input (docs/wiring.md) is MANDATORY, not optional.
+
+status_led:
+  pin:
+    number: ${pin_status_led}

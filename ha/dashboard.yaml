@@ -1,0 +1,23 @@
+# Lovelace card for the garage door. Paste into a manual card
+# (Add card → Manual) and adjust entity ids to your instance.
+
+type: vertical-stack
+cards:
+  - type: cover
+    entity: cover.garage_door
+    name: Garage Door
+  - type: entities
+    title: Garage Door Status
+    entities:
+      - entity: sensor.garage_door_door_state
+        name: State
+      - entity: binary_sensor.garage_door_fault
+        name: Fault
+      - entity: binary_sensor.garage_door_closed_endstop
+        name: Closed endstop
+      - entity: binary_sensor.garage_door_open_endstop
+        name: Open endstop
+      - entity: button.garage_door_clear_fault
+        name: Clear fault
+      - entity: update.garage_door_firmware
+        name: Firmware

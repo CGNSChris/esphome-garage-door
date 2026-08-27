@@ -1,0 +1,42 @@
+# Home Assistant automations for the garage door controller.
+# Adjust entity ids to match your HA instance (Settings → Devices → the
+# Garage Door device) and replace notify.notify with your notifier.
+
+- alias: "Garage door left open"
+  id: garage_door_left_open
+  description: >-
+    Notify when the garage door has not been closed for 15 minutes.
+    Uses "not closed" rather than "open" so a partially-open door
+    (STOPPED_PARTIAL) also alerts.
+  trigger:
+    - platform: state
+      entity_id: cover.garage_door
+      from: "closed"
+      for: "00:15:00"
+  action:
+    - service: notify.notify
+      data:
+        title: "Garage door"
+        message: >-
+          The garage door has been open for 15 minutes
+          (state: {{ states('sensor.garage_door_door_state') }}).
+  mode: single
+
+- alias: "Garage door fault"
+  id: garage_door_fault
+  description: >-
+    Prominent alert: a fault means the door's position is UNKNOWN and the
+    controller is refusing commands until the fault is cleared.
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.garage_door_fault
+      to: "on"
+  action:
+    - service: notify.notify
+      data:
+        title: "⚠ Garage door FAULT"
+        message: >-
+          Garage door controller fault:
+          {{ states('sensor.garage_door_door_state') }}.
+          Position is unknown. Check the door, then press Clear Fault.
+  mode: single

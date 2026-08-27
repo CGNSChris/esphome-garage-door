@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Garage Door Controller — firmware</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 42rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.5; }
+    code { background: #eee; padding: 0.1em 0.3em; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h1>Garage Door Controller</h1>
+  <p>Self-hosted ESPHome firmware for an ESP32-C6 dual-endstop garage door
+     controller. Source: <a href="https://github.com/CGNSChris/esphome-garage-door">CGNSChris/esphome-garage-door</a>.</p>
+
+  <h2>First flash (USB)</h2>
+  <p>Connect the board by USB and click install. Use the board's
+     <strong>UART USB port</strong> if it has both, and Chrome or Edge.</p>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <esp-web-install-button manifest="firmware/manifest.json"></esp-web-install-button>
+
+  <h2>Updates</h2>
+  <p>After the first flash, the device updates itself over WiFi from
+     <a href="manifest.json"><code>manifest.json</code></a> (checked every 6 h,
+     installed only when you press Install in Home Assistant).</p>
+</body>
+</html>
