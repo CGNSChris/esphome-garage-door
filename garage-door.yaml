@@ -45,9 +45,16 @@ substitutions:
   # --- Opener behaviour (see docs/calibration.md) ---------------------------
   #   reverse            a press while moving reverses (Type A)
   #   stop_then_reverse  a press while moving stops; the NEXT press reverses (Type B)
-  # stop_then_reverse is the safe default: an extra pulse on a Type A opener
-  # merely stops the door, whereas a missing pulse on a Type B opener leaves
-  # it moving the wrong way.
+  #
+  # CONFIRMED Type B by observation on 2026-08-27 (pressed mid-travel: the
+  # door stopped rather than reversing). This is measured, not the fail-safe
+  # default it happens to coincide with.
+  #
+  # Consequence, expected and not a fault: commanding the SAME direction the
+  # door last travelled, from a mid-travel stop, takes three pulses (wrong
+  # way, stop, right way), so the door briefly nudges the wrong way first.
+  # That is how a Type B opener's button cycle works; no pulse count avoids
+  # it. See docs/opener-compatibility.md.
   opener_cycle_mode: stop_then_reverse
   relay_pulse_width: 500ms
   inter_pulse_gap: 600ms

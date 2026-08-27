@@ -34,6 +34,10 @@ If you cannot test yet, leave the default `stop_then_reverse`: an extra pulse
 on a Type A opener stops the door, whereas a missing pulse on a Type B opener
 leaves it moving the wrong way. The default fails safe.
 
+> **This install:** confirmed **Type B** on 2026-08-27 by pressing mid-travel
+> and observing the door stop rather than reverse. `stop_then_reverse` is
+> therefore measured here, not assumed.
+
 ### Type B footnote — commanding the same direction twice
 
 On a Type B opener the button cycle is open → stop → close → stop → open…
