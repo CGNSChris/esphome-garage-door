@@ -34,7 +34,7 @@ safe_mode:
 wifi:
   ssid: ${wifi_ssid}
   password: ${wifi_password}
-  # Tier 1: never reboot on WiFi loss. The local button and state machine
+  # Tier 1: never reboot on WiFi loss. Endstop sensing and the state machine
   # keep working regardless of network state.
   reboot_timeout: 0s
   ap:

@@ -324,21 +324,6 @@ script:
             id(transition_to).execute(0);
           }
 
-  # ------------------------------------------------------------ local button --
-  # Tier 1: works with the network down. Stop if moving; otherwise toggle.
-  - id: on_local_button
-    mode: single
-    then:
-      - lambda: |-
-          const int s = id(door_state);
-          if (s == 5 || s == 6) {
-            ESP_LOGW("door", "Button press refused: in FAULT");
-            return;
-          }
-          if (s == 2 || s == 3)      id(handle_command).execute(2);  // stop
-          else if (s == 0)           id(handle_command).execute(0);  // open
-          else if (s == 1)           id(handle_command).execute(1);  // close
-          else                       id(handle_command).execute(0);  // stopped/unknown -> open
 
 # -------------------------------------------------------------------- cover --
 cover:

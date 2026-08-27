@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 925" width="980" height="925" role="img" aria-labelledby="svgtitle svgdesc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 905" width="980" height="905" role="img" aria-labelledby="svgtitle svgdesc">
   <title id="svgtitle">Garage door controller wiring (ESP32-S3 or ESP32-C6)</title>
-  <desc id="svgdesc">Two reed endstops switch to ground on GPIO18 and GPIO10 with internal pull-ups, plus an optional local button on GPIO11. GPIO7 drives an opto-isolated relay module and carries a mandatory 10 kilohm pull-down to ground. The relay's dry contact and the opener's existing wall switch both bridge the same two wall-button terminals, in parallel, so either can operate the door; the existing wall switch is never connected to the ESP32. GPIO2 drives a status LED through a 1 kilohm resistor.</desc>
+  <desc id="svgdesc">Two reed endstops switch to ground on GPIO18 and GPIO10 with internal pull-ups. The controller has no button of its own. GPIO7 drives an opto-isolated relay module and carries a mandatory 10 kilohm pull-down to ground. The relay's dry contact and the opener's existing wall switch both bridge the same two wall-button terminals, in parallel, so either can operate the door; the existing wall switch is never connected to the ESP32. GPIO2 drives a status LED through a 1 kilohm resistor.</desc>
 
-  <rect x="0" y="0" width="980" height="925" fill="#ffffff"/>
-  <rect x="0.5" y="0.5" width="979" height="924" fill="none" stroke="#dddddd"/>
+  <rect x="0" y="0" width="980" height="905" fill="#ffffff"/>
+  <rect x="0.5" y="0.5" width="979" height="904" fill="none" stroke="#dddddd"/>
 
   <g font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" fill="#1a1a1a">
 
@@ -39,18 +39,7 @@
     <line x1="80" y1="250" x2="45" y2="250" stroke="#1a1a1a" stroke-width="2"/>
     <circle cx="45" cy="250" r="4" fill="#1a1a1a"/>
 
-    <!-- OPTIONAL local button - dashed throughout to mark it omittable -->
-    <rect x="80" y="303" width="160" height="54" rx="4" fill="#ffffff" stroke="#8a8a8a" stroke-width="2" stroke-dasharray="6 4"/>
-    <text x="160" y="321" font-size="11" font-weight="700" fill="#555555" text-anchor="middle">OPTIONAL new button</text>
-    <text x="160" y="336" font-size="9" fill="#777777" text-anchor="middle">on the controller enclosure</text>
-    <text x="160" y="349" font-size="9" font-weight="700" fill="#777777" text-anchor="middle">NOT your wall switch</text>
-    <line x1="240" y1="330" x2="380" y2="330" stroke="#8a8a8a" stroke-width="2" stroke-dasharray="6 4"/>
-    <text x="310" y="322" font-size="11" font-weight="700" fill="#555555" text-anchor="middle">GPIO11</text>
-    <line x1="80" y1="330" x2="45" y2="330" stroke="#8a8a8a" stroke-width="2" stroke-dasharray="6 4"/>
-    <circle cx="45" cy="330" r="4" fill="#8a8a8a"/>
-
-    <text x="240" y="382" font-size="10" font-style="italic" fill="#555555" text-anchor="middle">internal pull-ups; switches close to GND</text>
-    <text x="240" y="395" font-size="10" font-style="italic" fill="#777777" text-anchor="middle">dashed = optional, leave unwired</text>
+    <text x="240" y="320" font-size="10" font-style="italic" fill="#555555" text-anchor="middle">both reeds: internal pull-up, switch closes to GND</text>
 
     <!-- status LED -->
     <line x1="380" y1="430" x2="320" y2="430" stroke="#1a1a1a" stroke-width="2"/>
@@ -139,12 +128,11 @@
     <!-- ============ notes ============ -->
     <line x1="40" y1="790" x2="940" y2="790" stroke="#dddddd" stroke-width="1"/>
     <text x="40" y="812" font-size="10" fill="#1f6feb" font-weight="700">Two switches bridge the same two terminals:</text>
-    <text x="253" y="812" font-size="10" fill="#555555">our relay contact and your existing wall switch. Either operates the door; neither can see the other.</text>
-    <text x="40" y="830" font-size="10" fill="#555555">GPIO11 is an OPTIONAL extra button on the controller &#8212; a new part, not your wall switch. Skip it: your wall switch already gives local control with the network down.</text>
-    <text x="40" y="848" font-size="10" fill="#555555">Door position never comes from the control path &#8212; it comes from the two reeds, so the door is tracked however it was moved (wall switch, handset, or us).</text>
-    <text x="40" y="866" font-size="10" fill="#c0392b" font-weight="700">The 10 k&#8486; pull-down is not optional &#8212; the relay GPIO floats between power-on and firmware boot, and a floating relay input can latch on.</text>
-    <text x="40" y="884" font-size="10" fill="#555555">Reserved &#8212; S3: 19/20 USB, 0/3/45/46 strapping, 43/44 UART0, 26&#8211;32 flash, 33&#8211;37 octal PSRAM. C6: 12/13 USB, 4/5/8/9/15 strapping, 16/17 UART0, 24&#8211;30 flash.</text>
-    <text x="40" y="902" font-size="10" fill="#555555">Blue = opener-side circuit, galvanically isolated from the ESP32 by the relay's optocoupler. It shares no ground with the controller.</text>
+    <text x="253" y="812" font-size="10" fill="#555555">our relay contact and your existing wall switch. Either operates the door; neither can see the other. The controller has no button of its own.</text>
+    <text x="40" y="830" font-size="10" fill="#555555">Door position never comes from the control path &#8212; it comes from the two reeds, so the door is tracked however it was moved (wall switch, handset, or us).</text>
+    <text x="40" y="848" font-size="10" fill="#c0392b" font-weight="700">The 10 k&#8486; pull-down is not optional &#8212; the relay GPIO floats between power-on and firmware boot, and a floating relay input can latch on.</text>
+    <text x="40" y="866" font-size="10" fill="#555555">Reserved &#8212; S3: 19/20 USB, 0/3/45/46 strapping, 43/44 UART0, 26&#8211;32 flash, 33&#8211;37 octal PSRAM. C6: 12/13 USB, 4/5/8/9/15 strapping, 16/17 UART0, 24&#8211;30 flash.</text>
+    <text x="40" y="884" font-size="10" fill="#555555">Blue = opener-side circuit, galvanically isolated from the ESP32 by the relay's optocoupler. It shares no ground with the controller.</text>
   </g>
 
   <defs>

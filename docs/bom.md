@@ -18,9 +18,8 @@ are what actually returns the right part.
 | 1 | **2** | Dev board — **either** chip | `ESP32-S3-DevKitC-1 N16R8` **or** `ESP32-C6-DevKitC-1 N8` | 6–10 ea | Firmware ships for both; see §4 to choose. On the S3 **the `R8` suffix is the point** — that is the 8 MB octal PSRAM. Buy two of whichever you pick: DOA rate is real, and the bench tests involve waving magnets at a rig you don't want to be the installed unit. |
 | 2 | 1 | Relay module, 1 channel | `1 channel relay module 3V optocoupler` | 1–2 | **Check you don't already have one — a stepper-driver project won't have supplied it.** Wants an explicit PC817 optocoupler and a 3 V coil (`SRD-03VDC-SL-C` or `HK4100F-DC3V`). Contacts only bridge the opener's low-voltage button terminals, so a signal relay is ample; you do not need a 10 A mains relay. |
 | 3 | **4** | Reed switch + magnet | `MC-38 wired door window magnetic sensor` | 1–2 ea | Two installed, two spare/bench. Prefer a **≥15 mm sensing gap**. See §3. |
-| 4 | 0–1 | Momentary pushbutton *(optional)* | `panel mount momentary push button N/O` | 1–2 | **Only if you want an extra button on the controller enclosure.** It is not your opener's wall switch and does not replace it — and since a hardwired wall switch already gives you control with the network down, most builds should skip this and delete the `local_button` include. |
-| 5 | 1 | LED, 3 mm | `3mm LED assorted kit` | 2 /100 | Optional but useful — `status_led` shows WiFi/API state, which is the fastest way to diagnose a controller that has gone quiet. |
-| 6 | 1 | Resistor kit, ¼ W | `1/4W metal film resistor assortment kit` | 3–5 | Needs 10 kΩ (**mandatory** relay pull-down), 1 kΩ (LED series), and 4.7 kΩ if either endstop run is over ~10 m. A kit beats buying three values. |
+| 4 | 1 | LED, 3 mm | `3mm LED assorted kit` | 2 /100 | Optional but useful — `status_led` shows WiFi/API state, which is the fastest way to diagnose a controller that has gone quiet. |
+| 5 | 1 | Resistor kit, ¼ W | `1/4W metal film resistor assortment kit` | 3–5 | Needs 10 kΩ (**mandatory** relay pull-down), 1 kΩ (LED series), and 4.7 kΩ if either endstop run is over ~10 m. A kit beats buying three values. |
 
 ## 2. Assembly
 
@@ -91,6 +90,9 @@ that wrong is a boot failure, not a warning.
 - **No CH340/USB-UART bridge.** That was only ever a workaround for keeping the
   door contact on GPIO18 the way upstream does. The pin map here avoids both
   chips' USB pins outright, which is the simpler fix.
+- **No pushbutton.** The controller has no button of its own — your opener's
+  existing wall switch already provides control independent of this device, and
+  wired straight to the opener it survives the controller being unplugged.
 - **No second set of wiring.** The five signal pins are drawn from the GPIOs
   free on *both* chips (see [wiring.md](wiring.md)), so the harness does not
   care which board you bought.
