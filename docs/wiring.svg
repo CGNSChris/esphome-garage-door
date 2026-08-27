@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 800" width="940" height="800" role="img" aria-labelledby="svgtitle svgdesc">
+  <title id="svgtitle">ESP32-C6 garage door controller wiring</title>
+  <desc id="svgdesc">Two reed endstops and a wall button connect to GPIO18, GPIO19 and GPIO3 with internal pull-ups, switching to a common ground. GPIO7 drives an opto-isolated relay module and carries a mandatory 10 kilohm pull-down to ground. The relay's dry contacts wire in parallel with the garage opener's existing wall-button terminals. GPIO2 drives a status LED through a 1 kilohm resistor.</desc>
+
+  <rect x="0" y="0" width="940" height="800" fill="#ffffff"/>
+  <rect x="0.5" y="0.5" width="939" height="799" fill="none" stroke="#dddddd"/>
+
+  <g font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" fill="#1a1a1a">
+
+    <text x="40" y="44" font-size="20" font-weight="700">ESP32-C6 Garage Door Controller &#8212; Wiring</text>
+    <text x="40" y="66" font-size="12" fill="#555555">Default pin assignments from garage-door.yaml. These are GPIO numbers, not header positions &#8212; check your board's silkscreen.</text>
+
+    <!-- ============ MCU ============ -->
+    <rect x="400" y="130" width="180" height="370" rx="6" fill="#f2f2f0" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="490" y="300" font-size="18" font-weight="700" text-anchor="middle">ESP32-C6</text>
+    <text x="490" y="322" font-size="12" fill="#555555" text-anchor="middle">DevKitC-1</text>
+    <text x="490" y="340" font-size="11" fill="#555555" text-anchor="middle">8 MB flash &#183; esp-idf</text>
+
+    <!-- USB power in -->
+    <line x1="490" y1="92" x2="490" y2="126" stroke="#1a1a1a" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="504" y="110" font-size="11" fill="#555555">USB-C 5 V</text>
+
+    <!-- ============ LEFT: inputs ============ -->
+    <!-- ground bus -->
+    <line x1="50" y1="170" x2="50" y2="640" stroke="#1a1a1a" stroke-width="2"/>
+
+    <!-- reed: closed endstop -->
+    <rect x="90" y="145" width="160" height="50" rx="4" fill="#f2f2f0" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="170" y="166" font-size="12" font-weight="700" text-anchor="middle">Reed &#8212; CLOSED</text>
+    <text x="170" y="183" font-size="10" fill="#555555" text-anchor="middle">MC-38 + magnet on door</text>
+    <line x1="250" y1="170" x2="400" y2="170" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="325" y="162" font-size="11" font-weight="700" text-anchor="middle">GPIO18</text>
+    <line x1="90" y1="170" x2="50" y2="170" stroke="#1a1a1a" stroke-width="2"/>
+
+    <!-- reed: open endstop -->
+    <rect x="90" y="225" width="160" height="50" rx="4" fill="#f2f2f0" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="170" y="246" font-size="12" font-weight="700" text-anchor="middle">Reed &#8212; OPEN</text>
+    <text x="170" y="263" font-size="10" fill="#555555" text-anchor="middle">MC-38 + magnet on track</text>
+    <line x1="250" y1="250" x2="400" y2="250" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="325" y="242" font-size="11" font-weight="700" text-anchor="middle">GPIO19</text>
+    <line x1="90" y1="250" x2="50" y2="250" stroke="#1a1a1a" stroke-width="2"/>
+    <circle cx="50" cy="250" r="4" fill="#1a1a1a"/>
+
+    <!-- local button -->
+    <rect x="90" y="305" width="160" height="50" rx="4" fill="#f2f2f0" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="170" y="326" font-size="12" font-weight="700" text-anchor="middle">Wall button</text>
+    <text x="170" y="343" font-size="10" fill="#555555" text-anchor="middle">momentary, N/O</text>
+    <line x1="250" y1="330" x2="400" y2="330" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="325" y="322" font-size="11" font-weight="700" text-anchor="middle">GPIO3</text>
+    <line x1="90" y1="330" x2="50" y2="330" stroke="#1a1a1a" stroke-width="2"/>
+    <circle cx="50" cy="330" r="4" fill="#1a1a1a"/>
+
+    <text x="262" y="382" font-size="10" font-style="italic" fill="#555555" text-anchor="middle">internal pull-ups; switches close to GND</text>
+
+    <!-- status LED branch -->
+    <line x1="400" y1="410" x2="330" y2="410" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="365" y="402" font-size="11" font-weight="700" text-anchor="middle">GPIO2</text>
+    <rect x="280" y="400" width="50" height="20" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="305" y="437" font-size="10" fill="#555555" text-anchor="middle">1 k&#8486;</text>
+    <line x1="280" y1="410" x2="250" y2="410" stroke="#1a1a1a" stroke-width="2"/>
+    <polygon points="250,398 250,422 226,410" fill="#f2f2f0" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="226" y1="397" x2="226" y2="423" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="222" y="437" font-size="10" fill="#555555" text-anchor="middle">status LED</text>
+    <line x1="226" y1="410" x2="50" y2="410" stroke="#1a1a1a" stroke-width="2"/>
+    <circle cx="50" cy="410" r="4" fill="#1a1a1a"/>
+
+    <!-- ============ RIGHT: relay ============ -->
+    <rect x="690" y="150" width="200" height="220" rx="6" fill="#f2f2f0" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="790" y="180" font-size="13" font-weight="700" text-anchor="middle">Relay module</text>
+    <text x="790" y="198" font-size="10" fill="#555555" text-anchor="middle">opto-isolated &#183; 3 V coil</text>
+
+    <line x1="580" y1="220" x2="690" y2="220" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="635" y="212" font-size="11" font-weight="700" text-anchor="middle">3V3</text>
+    <text x="700" y="224" font-size="10" font-weight="700">VCC</text>
+
+    <line x1="580" y1="270" x2="690" y2="270" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="655" y="262" font-size="11" font-weight="700" text-anchor="middle">GPIO7</text>
+    <text x="700" y="274" font-size="10" font-weight="700">IN</text>
+
+    <line x1="690" y1="320" x2="660" y2="320" stroke="#1a1a1a" stroke-width="2"/>
+    <line x1="660" y1="320" x2="660" y2="640" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="700" y="324" font-size="10" font-weight="700">GND</text>
+
+    <text x="760" y="352" font-size="10" font-weight="700" fill="#1f6feb" text-anchor="middle">COM</text>
+    <text x="840" y="352" font-size="10" font-weight="700" fill="#1f6feb" text-anchor="middle">NO</text>
+
+    <!-- 10k pull-down: the one element the safety argument hinges on -->
+    <circle cx="620" cy="270" r="4" fill="#1a1a1a"/>
+    <line x1="620" y1="270" x2="620" y2="520" stroke="#c0392b" stroke-width="2.5"/>
+    <rect x="605" y="520" width="30" height="60" fill="#ffffff" stroke="#c0392b" stroke-width="2.5"/>
+    <line x1="620" y1="580" x2="620" y2="640" stroke="#c0392b" stroke-width="2.5"/>
+    <text x="594" y="546" font-size="12" font-weight="700" fill="#c0392b" text-anchor="end">10 k&#8486; pull-down</text>
+    <text x="594" y="563" font-size="10" fill="#c0392b" text-anchor="end">mandatory &#8212; see note below</text>
+
+    <!-- ============ opener side (galvanically isolated) ============ -->
+    <line x1="760" y1="370" x2="760" y2="440" stroke="#1f6feb" stroke-width="2"/>
+    <line x1="840" y1="370" x2="840" y2="440" stroke="#1f6feb" stroke-width="2"/>
+    <rect x="690" y="440" width="200" height="94" rx="6" fill="#ffffff" stroke="#1f6feb" stroke-width="2"/>
+    <text x="790" y="470" font-size="12" font-weight="700" fill="#1f6feb" text-anchor="middle">Garage opener</text>
+    <text x="790" y="488" font-size="10" fill="#1a1a1a" text-anchor="middle">wall-button terminals</text>
+    <text x="790" y="506" font-size="9" fill="#555555" text-anchor="middle">dry contact, wired in parallel</text>
+    <text x="790" y="519" font-size="9" fill="#555555" text-anchor="middle">with the existing wall button</text>
+
+    <!-- ============ ground ============ -->
+    <line x1="490" y1="500" x2="490" y2="640" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="502" y="527" font-size="11" font-weight="700">GND</text>
+    <line x1="50" y1="640" x2="690" y2="640" stroke="#1a1a1a" stroke-width="2"/>
+    <circle cx="490" cy="640" r="4" fill="#1a1a1a"/>
+    <circle cx="620" cy="640" r="4" fill="#c0392b"/>
+    <circle cx="660" cy="640" r="4" fill="#1a1a1a"/>
+    <line x1="690" y1="640" x2="690" y2="654" stroke="#1a1a1a" stroke-width="2"/>
+    <line x1="672" y1="654" x2="708" y2="654" stroke="#1a1a1a" stroke-width="2.5"/>
+    <line x1="679" y1="662" x2="701" y2="662" stroke="#1a1a1a" stroke-width="2.5"/>
+    <line x1="686" y1="670" x2="694" y2="670" stroke="#1a1a1a" stroke-width="2.5"/>
+    <text x="690" y="690" font-size="11" font-weight="700" text-anchor="middle">GND</text>
+
+    <!-- ============ notes ============ -->
+    <line x1="40" y1="716" x2="900" y2="716" stroke="#dddddd" stroke-width="1"/>
+    <text x="40" y="734" font-size="10" fill="#c0392b" font-weight="700">The 10 k&#8486; pull-down is not optional &#8212; the relay GPIO floats between power-on and firmware boot, and a floating relay input can latch on.</text>
+    <text x="40" y="752" font-size="10" fill="#555555">Never assign GPIO12 / GPIO13: they are the C6's native USB-Serial-JTAG D&#8722; / D+ pins. Avoid GPIO4, 5, 8, 9 and 15 &#8212; strapping pins.</text>
+    <text x="40" y="770" font-size="10" fill="#1f6feb">Blue = opener-side circuit, galvanically isolated from the ESP32 by the relay's optocoupler. It shares no ground with the controller.</text>
+  </g>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+</svg>

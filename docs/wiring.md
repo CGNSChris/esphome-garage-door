@@ -2,6 +2,13 @@
 
 MCU: **ESP32-C6-DevKitC-1** (8 MB flash). Framework: esp-idf.
 
+![Wiring diagram: two reed endstops and a wall button switch to ground on GPIO18/19/3 with internal pull-ups; GPIO7 drives an opto-isolated relay and carries a mandatory 10 kΩ pull-down; the relay's dry contacts parallel the opener's wall-button terminals](wiring.svg)
+
+The reed switches and wall button share a common ground with the controller.
+The relay's contacts do **not** — they are a dry contact on the far side of the
+module's optocoupler, and wire in parallel with the opener's existing wall
+button.
+
 ## Pin map (defaults — change via substitutions, never in packages/)
 
 | Function | Substitution | Default | Notes |

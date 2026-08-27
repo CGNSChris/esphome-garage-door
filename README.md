@@ -29,8 +29,11 @@ Self-hosted ESPHome firmware for an **ESP32-C6** garage door controller with
 ## Hardware
 
 ESP32-C6-DevKitC-1 (8 MB), opto-isolated 3 V relay module, two reed switches,
-**mandatory 10 kΩ pull-down on the relay GPIO**. Full details and the pin map:
-[docs/wiring.md](docs/wiring.md).
+**mandatory 10 kΩ pull-down on the relay GPIO**.
+
+![Wiring diagram](docs/wiring.svg)
+
+Full pin map, polarity check and component notes: [docs/wiring.md](docs/wiring.md).
 
 ## Install
 
