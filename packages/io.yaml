@@ -49,6 +49,9 @@ switch:
     restore_mode: ALWAYS_OFF
     pin:
       number: ${pin_relay}
+      # Active-low relay modules need this true AND the hardware resistor
+      # changed from a pull-down to a pull-up. See garage-door.yaml.
+      inverted: ${relay_inverted}
 
 # W6 reminder: restore_mode ALWAYS_OFF is firmware-side only. The GPIO still
 # floats between power-on and boot, so the 10 kΩ hardware pull-down on the

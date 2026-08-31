@@ -35,6 +35,20 @@ substitutions:
   pin_relay: GPIO7
   pin_status_led: GPIO2
 
+  # --- Relay trigger polarity ----------------------------------------------
+  # "false" = ACTIVE-HIGH module (relay fires when IN goes high). Pair with the
+  #           10 k pull-DOWN in docs/wiring.md. This is the safe default.
+  # "true"  = ACTIVE-LOW module (relay fires when IN goes low). You MUST also
+  #           change the resistor to a 10 k pull-UP to 3.3 V.
+  #
+  # These two must change TOGETHER. An active-low module left on a pull-down
+  # sees a LOW input for the whole power-on window before firmware boots, which
+  # means the relay closes and the door moves on every power-up, brownout and
+  # reboot. Read docs/wiring.md before touching this.
+  #
+  # Many modules have an H/L trigger jumper -- set it to H and leave this false.
+  relay_inverted: "false"
+
   # --- Endstop polarity ---------------------------------------------------
   # Set independently: the two reeds may be different parts, and MC-38-class
   # sellers label N/O and N/C inconsistently. "false" = switch closes to GND

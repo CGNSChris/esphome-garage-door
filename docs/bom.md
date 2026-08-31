@@ -47,7 +47,7 @@ power supply. The two dev boards are roughly a third of it.
 | # | Qty | Item | Search term | ≈USD | Notes |
 |---|---|---|---|---|---|
 | 1 | **2** | Dev board — **either** chip | `ESP32-S3-DevKitC-1 N16R8` **or** `ESP32-C6-DevKitC-1 N8` | 6–10 ea | Firmware ships for both; see §4 to choose. On the S3 **the `R8` suffix is the point** — that is the 8 MB octal PSRAM. Buy two of whichever you pick: DOA rate is real, and the bench tests involve waving magnets at a rig you don't want to be the installed unit. |
-| 2 | 1 | Relay module, 1 channel | `1 channel relay module 3V optocoupler` | 1–2 | **Check you don't already have one — a stepper-driver project won't have supplied it.** Wants an explicit PC817 optocoupler and a 3 V coil (`SRD-03VDC-SL-C` or `HK4100F-DC3V`). Contacts only bridge the opener's low-voltage button terminals, so a signal relay is ample; you do not need a 10 A mains relay. |
+| 2 | 1 | Relay module, 1 channel | `1 channel relay module 3V optocoupler` | 1–2 | **Check you don't already have one — a stepper-driver project won't have supplied it.** Wants an explicit PC817 optocoupler and a 3 V / 3.3 V coil (`SRD-03VDC-SL-C` or `HK4100F-DC3V`) — a module sold as "3.3 V" is the right part. **Prefer one with an H/L trigger jumper, or explicitly active-HIGH**: an active-low module needs the mandatory resistor flipped to a pull-up *and* `relay_inverted: "true"`, and getting one without the other makes the door move at every power-on. See [wiring.md](wiring.md#relay-trigger-polarity--get-this-right-before-powering-up). Contacts only bridge the opener's low-voltage button terminals, so a signal relay is ample; you do not need a 10 A mains relay. |
 | 3 | **4** | Reed switch + magnet | `MC-38 wired door window magnetic sensor` | 1–2 ea | Two installed, two spare/bench. Prefer a **≥15 mm sensing gap** — see §3. |
 | 4 | 1 | LED, 3 mm | `3mm LED assorted kit` | 2 /100 | Optional but useful — `status_led` shows WiFi/API state, which is the fastest way to diagnose a controller that has gone quiet. |
 | 5 | 1 | Resistor kit, ¼ W | `1/4W metal film resistor assortment kit` | 3–5 | Needs 10 kΩ (**mandatory** relay pull-down), 1 kΩ (LED series), and 4.7 kΩ if either endstop run is over ~10 m. A kit beats buying three values. |
@@ -78,8 +78,13 @@ power supply. The two dev boards are roughly a third of it.
   `endstop_open_inverted` to match what actually turned up — they are separate
   substitutions precisely because the two sensors may not agree.
 - **Check the dev board's module marking**, not the listing title (see §4).
-- **Confirm the relay module's coil is really 3 V** and that it switches from a
-  3.3 V logic pin. Some "3V" listings ship 5 V coils that are unreliable at 3.3.
+- **Confirm the relay module's coil is really 3 V / 3.3 V** and that it switches
+  from a 3.3 V logic pin. Some "3V" listings ship 5 V coils that are unreliable
+  at 3.3.
+- **Determine whether the module is active-high or active-low** before wiring
+  anything, and set the resistor direction and `relay_inverted` to match. This
+  is the single most consequential check on the list — see
+  [wiring.md](wiring.md#relay-trigger-polarity--get-this-right-before-powering-up).
 
 ---
 

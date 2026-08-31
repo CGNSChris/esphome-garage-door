@@ -69,6 +69,49 @@ contact on GPIO18, which is a USB pin on the C3. It worked only because their
 board carries a CH340 bridge and doesn't use native USB. Never inherit pin
 numbers across chip families without re-checking them.
 
+## Relay trigger polarity — get this right before powering up
+
+A 3.3 V coil is correct and is what the BOM asks for. The voltage is not the
+risk. **Whether the module is active-high or active-low is**, because it decides
+what the relay does during the power-on window before firmware boots.
+
+| Module | Resistor | IN during boot | Relay | |
+|---|---|---|---|---|
+| **Active-HIGH** | 10 kΩ pull-**down** to GND | LOW | off | **safe — shipped default** |
+| Active-LOW | 10 kΩ pull-**down** to GND | LOW | **on** | **dangerous** |
+| Active-LOW | 10 kΩ pull-**up** to 3.3 V | HIGH | off | safe |
+
+The middle row is the trap. An active-low module on a pull-down sees a LOW
+input for the entire time between applying power and the firmware taking
+control — so the relay closes and **the door moves on every power-up, every
+brownout and every reboot.** That is the exact failure the resistor exists to
+prevent, inverted into the thing it was meant to stop.
+
+### If your module is active-low
+
+Two changes, and they must be made **together**:
+
+1. Hardware: fit the 10 kΩ as a **pull-up to 3.3 V**, not a pull-down.
+2. Firmware: set `relay_inverted: "true"` in your entry point.
+
+One without the other is worse than neither. With the resistor changed but not
+the firmware, the relay is energised whenever the door is idle; with the
+firmware changed but not the resistor, you are back to the dangerous row.
+
+**Easiest path:** many 1-channel modules have an **H/L trigger jumper.** Set it
+to **H**, keep the pull-down, and leave `relay_inverted: "false"`.
+
+### How to tell which you have
+
+- Read the silkscreen. "Low level trigger" / "LOW trigger" means active-low.
+- Or bench it, **with nothing connected to the opener**: power the module, leave
+  IN unconnected but pulled down through the 10 kΩ, and listen. If the relay
+  clicks in and stays closed, it is active-low. Confirm with a multimeter across
+  COM/NO — continuity at rest means active-low.
+
+This check is part of bench test 1, and it is the reason that test comes before
+anything is wired to the opener.
+
 ## Your wall switch is not wired to the controller
 
 There is **no button on the ESP32 at all.** The controller has exactly four
@@ -87,7 +130,9 @@ on the ESP32 could offer.
 
 ## Required external components
 
-1. **10 kΩ pull-down from the relay GPIO to GND — MANDATORY.**
+1. **10 kΩ resistor on the relay GPIO — MANDATORY. Direction depends on your
+   relay module; read the next section before fitting it.** For the default
+   active-high module it is a **pull-DOWN to GND**.
    The GPIO floats between power-on and firmware boot. A relay module with a
    floating input can latch on, and on a garage door that means the door moves
    with nobody there. `restore_mode: ALWAYS_OFF` and the 3-second boot
