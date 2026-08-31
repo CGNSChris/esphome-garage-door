@@ -112,7 +112,7 @@ has to redo it:
 
 Checked 2026-08-27 and **not adopted** — it works, but buys nothing here.
 
-It is a real ESP32-S3 with PSMRAM and an external antenna, and GPIO1/2/6/7 are
+It is a real ESP32-S3 with PSRAM and an external antenna, and GPIO1/2/6/7 are
 free on the XIAO, the S3-DevKitC and the C6 alike (all three validated), so a
 shared pin map was available. Two reasons not to bother:
 
