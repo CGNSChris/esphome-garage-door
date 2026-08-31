@@ -13,10 +13,10 @@ either, and swapping boards needs no rewiring. Pick your entry point:
 | ESP32-S3-DevKitC-1-N16R8 | `garage-door.yaml` | Dual core + 8 MB PSRAM; better BLE proxy host |
 | ESP32-C6-DevKitC-1-N8 | `garage-door-c6.yaml` | Single core, no PSRAM; adds Thread/Zigbee radio |
 
-![Wiring diagram: two reed endstops and a wall button switch to ground on GPIO18/10/11 with internal pull-ups; GPIO7 drives an opto-isolated relay and carries a mandatory 10 kΩ pull-down; the relay's dry contacts parallel the opener's wall-button terminals](wiring.svg)
+![Wiring diagram: two reed endstops switch to ground on GPIO18 and GPIO10 with internal pull-ups; GPIO7 drives an opto-isolated relay and carries a mandatory 10 kΩ resistor; the relay's dry contact parallels the opener's existing wall switch across the same two terminals](wiring.svg)
 
-The reed switches and our own button share a common ground with the controller.
-The relay's contacts do **not** — they are a dry contact on the far side of the
+The two reed switches share a common ground with the controller. The relay's
+contacts do **not** — they are a dry contact on the far side of the
 module's optocoupler.
 
 **Your existing wall switch stays connected.** The relay contact and the wall
@@ -39,7 +39,7 @@ tapping the button circuit.
 |---|---|---|---|
 | Closed endstop reed | `pin_endstop_closed` | GPIO18 | `INPUT_PULLUP`, polarity via `endstop_closed_inverted` |
 | Open endstop reed | `pin_endstop_open` | GPIO10 | `INPUT_PULLUP`, polarity via `endstop_open_inverted` |
-| Relay trigger | `pin_relay` | GPIO7 | `restore_mode: ALWAYS_OFF` + hardware pull-down |
+| Relay trigger | `pin_relay` | GPIO7 | `restore_mode: ALWAYS_OFF`, polarity via `relay_inverted`, + the mandatory 10 kΩ — see below |
 | Status LED | `pin_status_led` | GPIO2 | 1 kΩ series resistor |
 
 ### Why these four
@@ -130,17 +130,18 @@ on the ESP32 could offer.
 
 ## Required external components
 
-1. **10 kΩ resistor on the relay GPIO — MANDATORY. Direction depends on your
-   relay module; read the next section before fitting it.** For the default
-   active-high module it is a **pull-DOWN to GND**.
+1. **10 kΩ resistor on the relay GPIO — MANDATORY. Its direction depends on
+   your relay module — see *Relay trigger polarity* above before fitting it.**
+   For the default active-high module it is a **pull-DOWN to GND**.
    The GPIO floats between power-on and firmware boot. A relay module with a
    floating input can latch on, and on a garage door that means the door moves
    with nobody there. `restore_mode: ALWAYS_OFF` and the 3-second boot
    suppression in firmware are the second and third layers; the resistor is
    the first.
 2. **1 kΩ series resistor** on the status LED.
-3. **Opto-isolated relay module** with a 3 V coil, triggered from 3.3 V logic.
-   Relay contacts wire in parallel with the opener's wall-button terminals.
+3. **Opto-isolated relay module** with a 3 V / 3.3 V coil, triggered from 3.3 V
+   logic. Relay contacts wire in parallel with the opener's wall-button
+   terminals. Check its trigger polarity — see *Relay trigger polarity* above.
 4. **Two reed switches** (MC-38 class) with magnets, on 2-core alarm cable:
    - *Closed* endstop: magnet on the door, switch on the frame, aligned when
      the door is fully closed.
