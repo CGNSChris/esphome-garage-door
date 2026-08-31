@@ -108,6 +108,25 @@ has to redo it:
   WiFi 6. Neither is used here — this design is committed to ESPHome over
   WiFi — so the cost is future optionality, not function.
 
+### Considered and rejected: Seeed XIAO ESP32S3
+
+Checked 2026-08-27 and **not adopted** — it works, but buys nothing here.
+
+It is a real ESP32-S3 with PSMRAM and an external antenna, and GPIO1/2/6/7 are
+free on the XIAO, the S3-DevKitC and the C6 alike (all three validated), so a
+shared pin map was available. Two reasons not to bother:
+
+1. **No cost saving** at the prices actually available.
+2. **The antenna advantage is moot** — there is a WiFi AP in the garage, so
+   signal strength was never the constraint the external antenna would fix.
+
+Against that it would have cost a pin remap, `logger: hardware_uart: USB_CDC`
+(no UART bridge on the XIAO), and care with the relay coil on its smaller 3V3
+regulator. Also worth knowing for any future S3 board: **esp-web-tools cannot
+distinguish two ESP32-S3 boards** — they share a `chipFamily`, so a second S3
+variant cannot be served alongside the DevKitC one. `make_manifests.py` refuses
+duplicate families outright rather than mis-serving, so this fails in CI, loudly.
+
 ### Choosing the C6 instead
 
 Entirely defensible. The C6 is a perfectly adequate host for this design —
