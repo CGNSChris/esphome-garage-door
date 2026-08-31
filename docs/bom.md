@@ -1,13 +1,44 @@
 # Bill of materials
 
-For the **v2 dual-endstop design** on an ESP32-S3. This supersedes the
-C3-era BOM the project started from, which was written against the
+For the **v2 dual-endstop design**, on either supported chip. This supersedes
+the C3-era BOM the project started from, which was written against the
 single-sensor upstream config and is wrong in two ways that matter: it targets
 the C3, and it lists the second reed switch as *optional*. In this design the
 second endstop is the entire premise.
 
 Prices are indicative AliExpress listings in USD and will drift. Search terms
 are what actually returns the right part.
+
+**Compatibility confirmed:** the target opener has a plain momentary
+dry-contact wall button (checked 2026-08-27), so the relay-across-the-terminals
+approach in item 2 applies as designed. If you are reusing this BOM on a
+different opener, run the check in
+[opener-compatibility.md](opener-compatibility.md#check-this-first-is-your-wall-button-a-dry-contact)
+first — on a digital wall console no relay wiring works at all.
+
+---
+
+## Quick order list
+
+Everything, in one place, for pasting into a cart. Detail and reasoning below.
+
+- [ ] 2 × ESP32-S3-DevKitC-1 **N16R8** *(or* ESP32-C6-DevKitC-1 N8*)*
+- [ ] 1 × 1-channel relay module, 3 V coil, opto-isolated
+- [ ] 4 × MC-38 reed switch + magnet
+- [ ] 1 × 3 mm LED assortment
+- [ ] 1 × ¼ W resistor assortment (must contain 10 kΩ, 1 kΩ, 4.7 kΩ)
+- [ ] 1 × double-sided perfboard 5×7 cm
+- [ ] 3 × KF301-2P screw terminal block
+- [ ] 1 × 2.54 mm female pin header strip
+- [ ] 1 × 22 AWG silicone hookup wire kit
+- [ ] 1 × non-metallic ABS project box, IP-rated
+- [ ] 3 × PG7 cable gland
+- [ ] 3M VHB pads + cable ties
+- [ ] **Locally:** 20–30 m 2-core alarm cable 0.5 mm²
+- [ ] **Locally:** 5 V 1 A USB-C supply (if you don't have a spare)
+
+**Indicative total: ~USD 40–65** for the imported items, plus local cable and
+power supply. The two dev boards are roughly a third of it.
 
 ---
 
@@ -17,7 +48,7 @@ are what actually returns the right part.
 |---|---|---|---|---|---|
 | 1 | **2** | Dev board — **either** chip | `ESP32-S3-DevKitC-1 N16R8` **or** `ESP32-C6-DevKitC-1 N8` | 6–10 ea | Firmware ships for both; see §4 to choose. On the S3 **the `R8` suffix is the point** — that is the 8 MB octal PSRAM. Buy two of whichever you pick: DOA rate is real, and the bench tests involve waving magnets at a rig you don't want to be the installed unit. |
 | 2 | 1 | Relay module, 1 channel | `1 channel relay module 3V optocoupler` | 1–2 | **Check you don't already have one — a stepper-driver project won't have supplied it.** Wants an explicit PC817 optocoupler and a 3 V coil (`SRD-03VDC-SL-C` or `HK4100F-DC3V`). Contacts only bridge the opener's low-voltage button terminals, so a signal relay is ample; you do not need a 10 A mains relay. |
-| 3 | **4** | Reed switch + magnet | `MC-38 wired door window magnetic sensor` | 1–2 ea | Two installed, two spare/bench. Prefer a **≥15 mm sensing gap**. See §3. |
+| 3 | **4** | Reed switch + magnet | `MC-38 wired door window magnetic sensor` | 1–2 ea | Two installed, two spare/bench. Prefer a **≥15 mm sensing gap** — see §3. |
 | 4 | 1 | LED, 3 mm | `3mm LED assorted kit` | 2 /100 | Optional but useful — `status_led` shows WiFi/API state, which is the fastest way to diagnose a controller that has gone quiet. |
 | 5 | 1 | Resistor kit, ¼ W | `1/4W metal film resistor assortment kit` | 3–5 | Needs 10 kΩ (**mandatory** relay pull-down), 1 kΩ (LED series), and 4.7 kΩ if either endstop run is over ~10 m. A kit beats buying three values. |
 
@@ -25,20 +56,30 @@ are what actually returns the right part.
 
 | # | Qty | Item | Search term | ≈USD | Notes |
 |---|---|---|---|---|---|
-| 7 | 1 | Perfboard | `double sided prototype PCB 5x7cm` | 3 /10 | Solder it down. Dupont jumpers will not survive a garage. |
-| 8 | 3 | Screw terminal block | `KF301-2P 5.08mm PCB screw terminal` | 2 /20 | One per endstop run, one for the relay output. Field wiring stays serviceable. |
-| 9 | 1 | Pin header / socket strip | `2.54mm female pin header strip` | 2 /50 | Socket the dev board rather than soldering it — swapping it shouldn't mean desoldering. Note the S3-DevKitC-1 is **wider** than a C3/C6 DevKit; check your socket spacing against the actual board. |
-| 10 | 1 | Hookup wire, 22 AWG | `22AWG silicone wire kit 6 colours` | 5–7 | Silicone stranded is far easier than solid-core PVC. |
-| 11 | 1 | ABS enclosure | `ABS project box 100x60x25 waterproof` | 2–4 | **Non-metallic** — a metal box kills WiFi and the BLE proxy. IP-rated is worth it in a garage. |
-| 12 | 3 | Cable gland, PG7 | `PG7 cable gland nylon` | 2 /20 | Two endstop runs plus the relay output. |
-| 13 | — | Fixings | `3M VHB pads`, `cable ties` | 3–5 | VHB for the reeds — see the note in [wiring.md](wiring.md) about keeping the *open* endstop adjustable. |
+| 6 | 1 | Perfboard | `double sided prototype PCB 5x7cm` | 3 /10 | Solder it down. Dupont jumpers will not survive a garage. |
+| 7 | 3 | Screw terminal block | `KF301-2P 5.08mm PCB screw terminal` | 2 /20 | One per endstop run, one for the relay output. Field wiring stays serviceable. |
+| 8 | 1 | Pin header / socket strip | `2.54mm female pin header strip` | 2 /50 | Socket the dev board rather than soldering it — swapping it shouldn't mean desoldering. Note the S3-DevKitC-1 is **wider** than a C3/C6 DevKit; check your socket spacing against the actual board. |
+| 9 | 1 | Hookup wire, 22 AWG | `22AWG silicone wire kit 6 colours` | 5–7 | Silicone stranded is far easier than solid-core PVC. |
+| 10 | 1 | ABS enclosure | `ABS project box 100x60x25 waterproof` | 2–4 | **Non-metallic** — a metal box kills WiFi and the BLE proxy. IP-rated is worth it in a garage. |
+| 11 | 3 | Cable gland, PG7 | `PG7 cable gland nylon` | 2 /20 | Two endstop runs plus the relay output. |
+| 12 | — | Fixings | `3M VHB pads`, `cable ties` | 3–5 | VHB for the reeds — see the note in [wiring.md](wiring.md) about keeping the *open* endstop adjustable. |
 
 ## 3. Buy locally
 
 | # | Qty | Item | Why local |
 |---|---|---|---|
-| 14 | 20–30 m | 2-core alarm cable, 0.5 mm² | Bulk cable is heavy; shipping wipes out the saving and lead time is weeks. **Two runs now, not one** — closed endstop at the door, open endstop up the track. Jaycar, Bunnings, or an electrical wholesaler. |
-| 15 | 1 | 5 V 1 A USB-C supply | Correct plug type and actual electrical compliance on something powered 24/7. Don't buy an unbranded charger for this. |
+| 13 | 20–30 m | 2-core alarm cable, 0.5 mm² | Bulk cable is heavy; shipping wipes out the saving and lead time is weeks. **Two runs now, not one** — closed endstop at the door, open endstop up the track. Jaycar, Bunnings, or an electrical wholesaler. |
+| 14 | 1 | 5 V 1 A USB-C supply | Correct plug type and actual electrical compliance on something powered 24/7. Don't buy an unbranded charger for this. Use a spare you trust if you have one. |
+
+### On arrival, before building
+
+- **Buzz out both reeds with a multimeter.** MC-38-class listings sell N/O and
+  N/C and mislabel them constantly. Set `endstop_closed_inverted` and
+  `endstop_open_inverted` to match what actually turned up — they are separate
+  substitutions precisely because the two sensors may not agree.
+- **Check the dev board's module marking**, not the listing title (see §4).
+- **Confirm the relay module's coil is really 3 V** and that it switches from a
+  3.3 V logic pin. Some "3V" listings ship 5 V coils that are unreliable at 3.3.
 
 ---
 
@@ -70,11 +111,11 @@ has to redo it:
 ### Choosing the C6 instead
 
 Entirely defensible. The C6 is a perfectly adequate host for this design —
-nothing in Tier 1 (endstops, state machine, relay) is remotely stressed by
-either chip, and the BLE proxy works on a C6 with the tuned scan window. You
-give up the second core and PSRAM, and you gain an 802.15.4 radio and WiFi 6.
-Use `garage-door-c6.yaml`; it omits the `psram:` package, which is the only
-functional difference between the two configs.
+nothing in Tier 1 is remotely stressed by either chip, and the BLE proxy works
+on a C6 with the tuned scan window. You give up the second core and PSRAM, and
+you gain an 802.15.4 radio and WiFi 6. Use `garage-door-c6.yaml`; it omits the
+`psram:` package, which is the only functional difference between the two
+configs.
 
 ### If you take the S3
 
@@ -93,10 +134,12 @@ that wrong is a boot failure, not a warning.
 - **No pushbutton.** The controller has no button of its own — your opener's
   existing wall switch already provides control independent of this device, and
   wired straight to the opener it survives the controller being unplugged.
-- **No second set of wiring.** The five signal pins are drawn from the GPIOs
+- **No second set of wiring.** The four signal pins are drawn from the GPIOs
   free on *both* chips (see [wiring.md](wiring.md)), so the harness does not
   care which board you bought.
 - **No buzzer or beacon.** Those belong to unattended auto-close, which is
   deliberately out of scope for v1 — it needs an audible and visual warning
   sequence before movement, which is a safety design conversation and not a
   firmware toggle.
+- **No mains-rated relay, contactor or SSR.** The relay only closes a
+  low-voltage dry contact. Anything heavier is wasted money and a bigger box.
