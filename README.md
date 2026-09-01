@@ -30,9 +30,10 @@ Self-hosted ESPHome firmware for an **ESP32-S3 or ESP32-C6** garage door control
 
 ## Hardware
 
-**Either** an ESP32-S3-DevKitC-1-N16R8 or an ESP32-C6-DevKitC-1-N8, plus an
-opto-isolated 3 V relay module, two reed switches, and a **mandatory 10 kΩ
-pull-down on the relay GPIO**.
+**Either** an ESP32-S3-DevKitC-1-N16R8 or an ESP32-C6-DevKitC-1-N8, plus a
+1-channel opto-isolated relay module (**3 V or 5 V coil** — a supply link takes
+either), two reed switches, and a **mandatory 10 kΩ pull-down on the relay
+GPIO**.
 
 | Board | Entry point | Why |
 |---|---|---|

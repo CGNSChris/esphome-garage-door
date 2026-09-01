@@ -93,6 +93,17 @@ A 2-pin shunt on a 3-pin header can only ever bridge centre-to-one-side, so the
 rails cannot be shorted by a misplaced jumper. **Never fit two shunts** — that
 would tie 5 V to the 3.3 V rail.
 
+**Why `H` also simplifies the supply question.** On the `H` setting the opto
+LED is referenced to **GND**, so a 3.3 V GPIO drives it correctly no matter what
+`DC+` is. (On `L` the LED hangs off `VCC`, which is where the old "5 V module
+won't release from 3.3 V logic" problem comes from, and why cheaper boards need
+a separate JD-VCC supply for the coil.) With `H` selected you do not need a
+JD-VCC pin at all — the link alone covers both coil voltages.
+
+If the relay ever triggers unreliably from 3.3 V, that points at an input-side
+variant mismatch (LED resistor sized for a higher input voltage), not a wiring
+fault.
+
 ### Default the link to 3V3 — the two failure directions are not symmetric
 
 | Mistake | Result |
@@ -214,9 +225,9 @@ on the ESP32 could offer.
    suppression in firmware are the second and third layers; the resistor is
    the first.
 2. **1 kΩ series resistor** on the status LED.
-3. **Opto-isolated relay module**, 1 channel, with an H/L trigger jumper and a
-   JD-VCC pin — see *Which relay module to buy* above for the jumper settings
-   and supply arrangement. Contacts wire in parallel with the opener's
+3. **Opto-isolated relay module**, 1 channel, with an **H/L trigger jumper**.
+   Coil may be 3 V or 5 V — the supply link takes either; see *Which relay
+   module to buy* above. Contacts wire in parallel with the opener's
    wall-button terminals.
 4. **Two reed switches** (MC-38 class) with magnets, on 2-core alarm cable:
    - *Closed* endstop: magnet on the door, switch on the frame, aligned when

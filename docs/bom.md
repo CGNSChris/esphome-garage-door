@@ -47,7 +47,7 @@ first — on a digital wall console no relay wiring works at all.
 Everything, in one place, for pasting into a cart. Detail and reasoning below.
 
 - [ ] 2 × ESP32-S3-DevKitC-1 **N16R8** *(or* ESP32-C6-DevKitC-1 N8*)*
-- [ ] 1 × 1-channel relay module, opto-isolated, **H/L trigger jumper**; 3 V coil preferred (5 V fine — needs the JD-VCC split)
+- [ ] 1 × 1-channel relay module, opto-isolated, **H/L trigger jumper**; **either 3 V or 5 V coil** — the supply link takes both
 - [ ] 4 × MC-38 reed switch + magnet
 - [ ] 1 × 3 mm LED assortment
 - [ ] 1 × ¼ W resistor assortment (must contain 10 kΩ, 1 kΩ, 4.7 kΩ)
@@ -73,7 +73,7 @@ power supply. The two dev boards are roughly a third of it.
 | # | Qty | Item | Search term | ≈USD | Notes |
 |---|---|---|---|---|---|
 | 1 | **2** | Dev board — **either** chip | `ESP32-S3-DevKitC-1 N16R8` **or** `ESP32-C6-DevKitC-1 N8` | 6–10 ea | Firmware ships for both; see §4 to choose. On the S3 **the `R8` suffix is the point** — that is the 8 MB octal PSRAM. Buy two of whichever you pick: DOA rate is real, and the bench tests involve waving magnets at a rig you don't want to be the installed unit. |
-| 2 | 1 | Relay module, 1 channel | `1 channel relay module optocoupler H L trigger` | 1–2 | **Check you don't already have one — a stepper-driver project won't have supplied it.** **Best: a 3 V coil with an H/L trigger jumper** — three wires (VCC→3V3, GND, IN→GPIO7), jumper to **H** (active-high, matching the shipped default), nothing else. **Verify the coil voltage from the relay cube's marking in the photos, not the description**: `SRD-03VDC-SL-C` or `HK4100F-DC3V` = 3 V and correct; `SRD-05VDC-SL-C` = 5 V, which is equally usable but needs the VCC–JD-VCC jumper removed and JD-VCC fed from 5 V. Both paths in [wiring.md](wiring.md#which-relay-module-to-buy-and-how-to-power-it). |
+| 2 | 1 | Relay module, 1 channel | `1 channel relay module optocoupler H L trigger` | 1–2 | **Check you don't already have one — a stepper-driver project won't have supplied it.** Needs an **H/L trigger jumper** (set **H**) and an opto-isolated input. **Either a 3 V or a 5 V coil is fine** — the 3V3/5V supply link takes both, so the coil voltage does not have to be resolved before ordering. Read it off the relay cube on arrival and set the link: `03VDC` → 3V3, `05VDC` → 5V; leave it on 3V3 until then. No JD-VCC pin is required. See [wiring.md](wiring.md#which-relay-module-to-buy-and-how-to-power-it). |
 | 3 | **4** | Reed switch + magnet | `MC-38 wired door window magnetic sensor` | 1–2 ea | Two installed, two spare/bench. Prefer a **≥15 mm sensing gap** — see §3. |
 | 4 | 1 | LED, 3 mm | `3mm LED assorted kit` | 2 /100 | Optional but useful — `status_led` shows WiFi/API state, which is the fastest way to diagnose a controller that has gone quiet. |
 | 5 | 1 | Resistor kit, ¼ W | `1/4W metal film resistor assortment kit` | 3–5 | Needs 10 kΩ (**mandatory** relay pull-down), 1 kΩ (LED series), and 4.7 kΩ if either endstop run is over ~10 m. A kit beats buying three values. |
