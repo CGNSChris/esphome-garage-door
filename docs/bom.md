@@ -9,11 +9,29 @@ second endstop is the entire premise.
 Prices are indicative AliExpress listings in USD and will drift. Search terms
 are what actually returns the right part.
 
-**Relay module chosen:** a SONGLE **`SRD-03VDC-SL-C`** 1-channel board — 3 V
-coil, NO/COM/NC screw terminals, 10 A contacts, H/L trigger jumper. Confirmed
-from the product photo 2026-08-27. Wires the simple way: `VCC`→3V3, `GND`,
-`IN`→GPIO7. Its input side is also a screw terminal, so **only two KF301 blocks
-are needed** (one per endstop run) rather than three.
+**Relay module — the requirement, and two verified candidates.** Needs a
+**3 V / 3.3 V coil** and an **H/L trigger jumper**. Two boards checked against
+photos on 2026-08-27, either acceptable:
+
+| Board | Coil marking | Jumper | Note |
+|---|---|---|---|
+| SONGLE `SRD-03VDC-SL-C` | 3 V, confirmed in photo | present, unlabelled | identify H/L by bench test |
+| BESTEP 1-channel, **3.3 V variant** | select at checkout | **`S1` silkscreened High/Low** | dual opto, status LEDs, screw terminals both sides |
+
+> **Multi-variant listings are the trap here.** The BESTEP board ships in 3.3 V,
+> 5 V, 12 V and 24 V coil versions from one listing, and the product photo may
+> show any of them — a `JQC3F-12VDC-C` cube in the picture is the **12 V** part,
+> which will not energise from 3.3 V at all. **Select the 3.3 V option
+> explicitly**; do not assume the pictured item is what you get.
+
+Either way, wiring is three screw terminals: `DC+`/`VCC` → 3V3, `DC-`/`GND` →
+GND, `IN` → GPIO7, jumper to **High**. Boards whose input side is a screw
+terminal need only **two** KF301 blocks (one per endstop run).
+
+Ignore any "even if the control line is broken the relay will not move" claim
+as a reason to skip the 10 kΩ pull-down. A severed wire is not the same case as
+a GPIO floating during power-on while still connected, and the resistor is the
+layer the whole boot-safety argument rests on.
 
 **Compatibility confirmed:** the target opener has a plain momentary
 dry-contact wall button (checked 2026-08-27), so the relay-across-the-terminals
