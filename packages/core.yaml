@@ -46,6 +46,12 @@ wifi:
 
 captive_portal:
 
+# Improv over the USB serial port. esp-web-tools offers a "connect to WiFi"
+# step in the browser immediately after flashing, so credentials never need
+# hard-coding and the fallback-AP route above becomes the backup rather than
+# the only path. Rides on the logger's UART; no extra hardware.
+improv_serial:
+
 # There is deliberately NO web_server: component. Home Assistant talks to
 # ESPHome over the native API (port 6053) and gets every entity that way; the
 # web UI would only add an unauthenticated control surface on port 80 (cover,

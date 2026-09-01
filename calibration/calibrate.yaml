@@ -64,6 +64,8 @@ wifi:
 
 captive_portal:
 
+improv_serial:
+
 globals:
   - id: t_left_closed
     type: uint32_t

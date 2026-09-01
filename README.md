@@ -65,8 +65,13 @@ What to order and why this part: [docs/bom.md](docs/bom.md).
 
 ### First boot — you do not need to hard-code WiFi
 
-The hosted firmware ships with placeholder credentials (`REPLACE_ME`), so on
-first boot it cannot join a network. After about a minute it brings up its own
+**Easiest path:** right after the web flasher finishes, the same browser page
+offers to connect the device to your WiFi (Improv over the USB serial link).
+Pick your network, enter the password, done — no AP, no captive portal.
+
+**Fallback path**, if you skipped that or the device ever loses WiFi: the
+hosted firmware ships with placeholder credentials (`REPLACE_ME`), so on first
+boot it cannot join a network. After about a minute it brings up its own
 access point, **`garage-door setup`**, password **`REPLACE_ME`** (the
 `ap_password` substitution). Join it from a phone or laptop; the captive-portal
 page lists the WiFi networks the device can see — pick yours and enter the
