@@ -61,8 +61,25 @@ What to order and why this part: [docs/bom.md](docs/bom.md).
 4. **Run the bench acceptance tests below before wiring the relay to the
    opener.**
 
-Adopting via the ESPHome dashboard uses `dashboard_import` pointing at
-**this** repo, never upstream.
+### First boot — you do not need to hard-code WiFi
+
+The hosted firmware ships with placeholder credentials (`REPLACE_ME`), so on
+first boot it cannot join a network. After about a minute it brings up its own
+access point, **`garage-door setup`**, password **`REPLACE_ME`** (the
+`ap_password` substitution). Join it from a phone or laptop; the captive-portal
+page lists the WiFi networks the device can see — pick yours and enter the
+password. The device stores those credentials and joins your network.
+
+That page comes from the `captive_portal` component, which brings its own HTTP
+server and does not need `web_server:`. The server exists **only while the
+fallback AP is up**; in normal operation there is no HTTP server on the device
+at all. It also re-appears automatically if the device ever loses WiFi for a
+minute, so you can re-provision after a router change the same way.
+
+Then adopt it in the ESPHome dashboard. `dashboard_import` points at **this**
+repo, never upstream; adoption creates a local copy of the entry point where
+you set a real `ap_password`, an API encryption key, and any tuning, and
+reflashes it over the air.
 
 ## The state machine
 
