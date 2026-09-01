@@ -73,27 +73,43 @@ numbers across chip families without re-checking them.
 
 ## Which relay module to buy, and how to power it
 
-**Buy the ordinary 1-channel 10 A module with an H/L trigger jumper.** It is
-far easier to source than a 3.3 V-coil module, and the jumpers make both of
-the awkward decisions for you instead of forcing you to decode a listing.
+**Best case: a 1-channel module with a 3 V coil and an H/L trigger jumper.**
+That combination needs no tricks — three wires and one jumper setting — and it
+is what the diagram shows.
 
-What to look for:
+| Pin | Connect to |
+|---|---|
+| `VCC` | **3V3** |
+| `GND` | GND |
+| `IN` | `GPIO7` |
 
-- **H/L trigger jumper** — set it to **H**. That makes it active-high, which
-  matches the shipped `relay_inverted: "false"` and the 10 kΩ pull-down.
-- **A 3-pin power header: GND / VCC / JD-VCC**, with a jumper bridging
-  VCC–JD-VCC. This is the important one; see below.
-- An optocoupler (PC817 or similar) on the input.
+Set the **H/L jumper to H** (active-high), which matches the shipped
+`relay_inverted: "false"` and the 10 kΩ pull-down. Done.
 
-### Remove the VCC–JD-VCC jumper
+### Verify the coil voltage from the photos, not the description
 
-A 5 V-coil module driven straight from 3.3 V logic is unreliable. On the usual
-input topology the opto LED sits between VCC (5 V) and IN, so a 3.3 V "high"
-still leaves ~1.7 V across it — often enough to keep it partly conducting, and
-**the relay never cleanly releases.** This is the classic "my 5 V relay module
-won't switch off" fault.
+Listing copy is templated and frequently wrong. The claim that matters is the
+coil voltage, and the truth is printed on the relay cube itself:
 
-The jumper exists precisely to fix this. Remove it and the two supplies split:
+| Marking on the cube | Coil | Verdict |
+|---|---|---|
+| `SRD-03VDC-SL-C` | 3 V | correct — wire as above |
+| `HK4100F-DC3V` | 3 V | correct — wire as above |
+| `SRD-05VDC-SL-C` | 5 V | the copy was wrong — use the 5 V path below |
+
+This is the same failure mode as the ESP32 module marking: read the silkscreen,
+not the title.
+
+### If you end up with a 5 V-coil module
+
+Perfectly usable, and these are the easiest to source — but a 5 V-coil module
+driven straight from 3.3 V logic is unreliable. On the usual input topology the
+opto LED sits between VCC (5 V) and IN, so a 3.3 V "high" still leaves ~1.7 V
+across it — often enough to keep it partly conducting, and **the relay never
+cleanly releases.** The classic "my 5 V relay module won't switch off" fault.
+
+Most such modules carry a **3-pin GND / VCC / JD-VCC header with a jumper**,
+which exists precisely to fix this. Remove it and the supplies split:
 
 | Pin | Connect to | Feeds |
 |---|---|---|
@@ -102,16 +118,19 @@ The jumper exists precisely to fix this. Remove it and the two supplies split:
 | `IN` | `GPIO7` | — |
 | `GND` | GND | — |
 
-Now the opto sees real 3.3 V logic and switches cleanly, while the coil gets
-the 5 V it wants. **Bonus:** the coil's ~70 mA is drawn from the USB 5 V rail
-rather than the board's 3.3 V regulator, which removes any brownout concern
-during WiFi transmit bursts.
+The opto then sees real 3.3 V logic while the coil gets its 5 V — and as a
+bonus the coil's ~70 mA comes off the USB 5 V rail rather than the board's
+3.3 V regulator. No JD-VCC pin? Feed `VCC` from 5 V, keep H/L on **H**, and
+confirm on the bench that the relay both closes *and fully releases*.
 
-If your module has no JD-VCC pin, feed `VCC` from 5 V, keep the trigger jumper
-on **H**, and confirm on the bench that the relay both closes *and fully
-releases* before trusting it.
+### Powering a 3 V coil from the 3V3 rail
 
-### The 10 A contact rating is irrelevant — and slightly imperfect
+Fine on a DevKitC — its regulator is fed from USB and rated well above the
+~70 mA coil plus the chip's ~350 mA WiFi peaks. Fit a bulk capacitor (~470 µF)
+on the 3V3 rail near the module as cheap insurance, and treat bench test 1
+(power-cycle plus a deliberately browned-out supply) as the check that it holds.
+
+### If it is a 10 A module, the rating is irrelevant — and slightly imperfect
 
 The contacts only bridge the opener's low-voltage button terminals, so 10 A is
 enormously over-spec. Harmless, and these modules are cheap and everywhere.
