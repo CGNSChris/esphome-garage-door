@@ -123,6 +123,25 @@ bonus the coil's ~70 mA comes off the USB 5 V rail rather than the board's
 3.3 V regulator. No JD-VCC pin? Feed `VCC` from 5 V, keep H/L on **H**, and
 confirm on the bench that the relay both closes *and fully releases*.
 
+### Using the dev board's 5 V pin
+
+On both the S3-DevKitC-1 and the C6-DevKitC-1 the `5V` header pin is tied to the
+**USB VBUS rail** through a protection Schottky — the same rail that feeds the
+onboard 3.3 V regulator. So it is a legitimate supply for a 5 V relay coil, and
+a good one: ~70 mA drawn there never loads the LDO that is already supplying the
+chip's ~350 mA WiFi transmit peaks. A 5 V 1 A supply covers both comfortably.
+
+Three caveats:
+
+- **It only has 5 V when the board is USB-powered.** Power the DevKit by feeding
+  3.3 V straight to the `3V3` pin instead and that pin is dead — the relay would
+  silently stop working.
+- **Expect ~4.6–4.7 V, not 5.0 V**, because of the diode drop. Harmless: a
+  `JQC3F-05VDC` pulls in at roughly 70–75 % of rated coil voltage (~3.5 V), so
+  there is plenty of margin.
+- **Do not feed external 5 V into that pin while USB is connected.** One source
+  at a time.
+
 ### Powering a 3 V coil from the 3V3 rail
 
 Fine on a DevKitC — its regulator is fed from USB and rated well above the
