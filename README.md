@@ -135,8 +135,11 @@ Nothing gets wired to the opener until all of these pass. Multimeter on the
 relay contacts for 1.
 
 1. Power-cycle 10× (plus a browned-out supply): the relay must never close.
-2. Boot with no endstop active → cover position unknown, `IDLE`, no guessed state.
+2. Boot with no endstop active → `Door State` = **UNKNOWN**; the cover reports
+   **open (100 %)**, `IDLE`, and never CLOSED. (An ESPHome cover cannot be
+   "unknown" — the API always sends a position — so open is the fail-safe.)
 3. Boot with both endstops active → `FAULT_SENSOR`, `Fault` on, commands refused.
+   Toggle either reed: the fault must **stay latched** until Clear Fault.
 4. Simulated open cycle (move the magnet by hand): CLOSED → open command →
    OPENING with interpolating position → open endstop → OPEN, position 1.0.
 5. Simulated close cycle: mirror, position 0.0.

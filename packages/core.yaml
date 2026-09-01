@@ -1,4 +1,4 @@
-# core.yaml — esphome:, esp32:, network, OTA, web server.
+# core.yaml — esphome:, esp32:, network, OTA.
 # Tier 2 lives here. Nothing in this file may be a dependency of the state
 # machine or the relay path (Tier 1).
 
@@ -39,11 +39,17 @@ wifi:
   reboot_timeout: 0s
   ap:
     ssid: "${name} setup"
+    # The fallback AP is the only time an HTTP server runs on this device
+    # (captive_portal starts one on port 80 for WiFi provisioning, and that
+    # server also carries an /update firmware endpoint). Password it.
+    password: ${ap_password}
 
 captive_portal:
 
-web_server:
-  port: 80
+# There is deliberately NO web_server: component. Home Assistant talks to
+# ESPHome over the native API (port 6053) and gets every entity that way; the
+# web UI would only add an unauthenticated control surface on port 80 (cover,
+# Restart, Factory Reset) plus ~6-10 KB of heap on the PSRAM-less C6.
 
 http_request:
   # Upstream ran with verify_ssl off (their W9) because TLS certificate

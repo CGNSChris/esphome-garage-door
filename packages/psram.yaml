@@ -1,7 +1,7 @@
 # psram.yaml — OPTIONAL, board-dependent.
 #
 # This is the main reason the design targets the S3 over the C6: the C6 has no
-# PSRAM support at all, and the BLE proxy plus WiFi plus API plus web server is
+# PSRAM support at all, and the BLE proxy plus WiFi plus API is
 # heap-hungry. Nothing in Tier 1 needs it.
 #
 # mode MUST match the board you actually bought:

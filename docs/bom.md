@@ -131,8 +131,8 @@ has to redo it:
   the C6 is a single 160 MHz RISC-V core. Tier 1 (endstops, state machine,
   relay) doesn't care in the slightest. It matters only for the BLE proxy,
   which is the one demanding workload in the design.
-- **PSRAM matters more.** The C6 supports none at all. BLE proxy + WiFi + API
-  + web server is heap-hungry, and the extra headroom is also what makes
+- **PSRAM matters more.** The C6 supports none at all. BLE proxy + WiFi + API is
+  heap-hungry, and the extra headroom is also what makes
   `ota_verify_ssl: "true"` a realistic option later (see `packages/core.yaml`).
 - **The S3 does not fix radio coexistence.** Both parts have a single 2.4 GHz
   RF chain with time-division WiFi/BLE. The second core relieves the CPU-side

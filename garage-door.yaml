@@ -89,6 +89,10 @@ substitutions:
   # Remote packages cannot use !secret, so these are substitutions.
   wifi_ssid: "REPLACE_ME"
   wifi_password: "REPLACE_ME"
+  # Fallback AP password (8+ chars). The AP only appears when WiFi is down,
+  # but while it is up it exposes WiFi provisioning and a firmware-upload
+  # endpoint, so it must not be open.
+  ap_password: "REPLACE_ME"
 
   # --- Build / OTA -------------------------------------------------------------
   project_version: "2026.8.1"

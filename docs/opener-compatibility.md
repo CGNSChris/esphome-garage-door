@@ -87,7 +87,9 @@ being pressed.** It doesn't need to. The reed endstops watch the door, so:
 - Door leaves the closed endstop with no command from us → the firmware logs
   *external control* and adopts `OPENING`. Same in reverse from `OPEN`.
 - Arriving at either endstop always snaps the state to that endstop, whoever
-  caused the movement, and clears any outstanding fault.
+  caused the movement, and clears a `FAULT_TIMEOUT`. A `FAULT_SENSOR` is
+  **latched** and clears only via the Clear Fault button — both endstops active
+  proves at least one reed is lying, so no reed event can be trusted to resolve it.
 
 The one gap: if someone presses the **wall switch mid-travel** — stopping or
 reversing the door partway — the controller keeps believing the original

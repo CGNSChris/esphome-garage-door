@@ -7,11 +7,19 @@
 #   2 OPENING          neither active, travelling toward open
 #   3 CLOSING          neither active, travelling toward closed
 #   4 STOPPED_PARTIAL  neither active, not travelling
-#   5 FAULT_TIMEOUT    travel exceeded the timeout; position unknown
+#   5 FAULT_TIMEOUT    travel exceeded the timeout; position unknown.
+#                      Cleared by an endstop becoming active (real evidence
+#                      the door moved) or by the Clear Fault button.
 #   6 FAULT_SENSOR     both endstops active — physically impossible, so a
-#                      wiring or sensor failure; surfaced, never auto-resolved
-#   7 UNKNOWN          boot with neither endstop active; nothing published to
-#                      the cover until an endstop is seen
+#                      wiring or sensor failure. LATCHED: cleared ONLY by the
+#                      Clear Fault button. Both-active proves at least one
+#                      reed is lying, so no reed event can be trusted to
+#                      resolve it.
+#   7 UNKNOWN          boot with neither endstop active. An ESPHome cover
+#                      cannot be "unknown" (the API sends position
+#                      unconditionally, HA has no missing-state for covers),
+#                      so the cover reports OPEN (1.0) -- the fail-safe
+#                      direction -- and the Door State text sensor says UNKNOWN
 #
 # Commands (handle_command cmd): 0 open, 1 close, 2 stop
 #
@@ -35,8 +43,9 @@ esphome:
           } else if (o) {
             id(transition_to).execute(1);            // OPEN
           } else {
-            // Position is genuinely unknown. Publish the internal state and
-            // fault entities, but never a cover state — and never guess CLOSED.
+            // Position is genuinely unknown. publish_all reports the cover as
+            // OPEN (the fail-safe direction -- never CLOSED) and the text
+            // sensor as UNKNOWN. See the note in publish_all.
             id(door_state) = 7;
             id(publish_all).execute();
           }
@@ -104,11 +113,20 @@ script:
             // carries the state; the cover stays unpublished rather than lie.
           } else {
             // STOPPED_PARTIAL / faults / UNKNOWN
+            cov->current_operation = esphome::cover::COVER_OPERATION_IDLE;
             if (id(pos_valid)) {
               cov->position = id(position_est);
-              cov->current_operation = esphome::cover::COVER_OPERATION_IDLE;
-              cov->publish_state();
+            } else {
+              // An ESPHome cover cannot be "unknown": the API sends position
+              // unconditionally on every subscribe and Home Assistant has no
+              // missing-state for covers. So when we genuinely do not know,
+              // report OPEN (1.0). That is the fail-safe direction: it can
+              // never claim the door is secured when it is not, and it fires
+              // the left-open alert. The Door State text sensor carries the
+              // honest UNKNOWN.
+              cov->position = 1.0f;
             }
+            cov->publish_state();
           }
 
   # ------------------------------------------------------------- transitions --
@@ -270,12 +288,19 @@ script:
             return;
           }
           const int s = id(door_state);
+          if (s == 6) {
+            // Latched sensor fault: a reed event is exactly what we cannot
+            // trust here. Stay put until Clear Fault.
+            ESP_LOGW("door", "Closed endstop active while in FAULT_SENSOR — "
+                             "ignored; fault is latched until Clear Fault");
+            return;
+          }
           if (s == 2)
             ESP_LOGW("door", "Closed endstop hit while OPENING — the opener "
                              "auto-reversed (obstruction detection?)");
-          if (s == 5 || s == 6)
-            ESP_LOGI("door", "Endstop seen; clearing fault");
-          id(transition_to).execute(0);      // any state: adopt CLOSED
+          if (s == 5)
+            ESP_LOGI("door", "Endstop seen; clearing FAULT_TIMEOUT");
+          id(transition_to).execute(0);      // adopt CLOSED
 
   - id: on_closed_endstop_release
     mode: single
@@ -288,11 +313,9 @@ script:
             ESP_LOGI("door", "Left closed endstop with no command — external "
                              "control, assuming OPENING");
             id(transition_to).execute(2);
-          } else if (s == 6 && id(endstop_open).state) {
-            // Both-active fault resolving itself: the closed reed released
-            // while the open reed is still active — adopt OPEN.
-            id(transition_to).execute(1);
           }
+          // In FAULT_SENSOR (6) a release changes nothing: the fault is
+          // latched and only Clear Fault exits it.
 
   - id: on_open_endstop_active
     mode: single
@@ -303,13 +326,18 @@ script:
             return;
           }
           const int s = id(door_state);
+          if (s == 6) {
+            ESP_LOGW("door", "Open endstop active while in FAULT_SENSOR — "
+                             "ignored; fault is latched until Clear Fault");
+            return;
+          }
           if (s == 3)
             ESP_LOGW("door", "Open endstop hit while CLOSING — the opener "
                              "auto-reversed (obstruction detection). This is "
                              "the safety case, handled, not impossible.");
-          if (s == 5 || s == 6)
-            ESP_LOGI("door", "Endstop seen; clearing fault");
-          id(transition_to).execute(1);      // any state: adopt OPEN
+          if (s == 5)
+            ESP_LOGI("door", "Endstop seen; clearing FAULT_TIMEOUT");
+          id(transition_to).execute(1);      // adopt OPEN
 
   - id: on_open_endstop_release
     mode: single
@@ -320,9 +348,8 @@ script:
             ESP_LOGI("door", "Left open endstop with no command — external "
                              "control, assuming CLOSING");
             id(transition_to).execute(3);
-          } else if (s == 6 && id(endstop_closed).state) {
-            id(transition_to).execute(0);
           }
+          // In FAULT_SENSOR (6) a release changes nothing -- latched.
 
 
 # -------------------------------------------------------------------- cover --
@@ -332,6 +359,11 @@ cover:
     name: None
     id: garage_cover
     device_class: garage
+    # NO_RESTORE is load-bearing. The default (RESTORE) re-applies and
+    # publishes the last flash-saved position during setup(), long before
+    # on_boot reads the endstops -- so after a power cut a door that was
+    # opened by hand would be reported CLOSED until an endstop fired.
+    restore_mode: NO_RESTORE
     has_position: true
     optimistic: false
     assumed_state: false

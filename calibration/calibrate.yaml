@@ -17,10 +17,15 @@ substitutions:
 
   endstop_closed_inverted: "false"
   endstop_open_inverted: "false"
+  # MUST match garage-door.yaml. The design is active-high (H/L jumper on H,
+  # 10k pull-down) so this stays "false". If you took the active-low path in
+  # the main config, set it here too, or this firmware holds the relay ON.
+  relay_inverted: "false"
   relay_pulse_width: 500ms
 
   wifi_ssid: "REPLACE_ME"
   wifi_password: "REPLACE_ME"
+  ap_password: "REPLACE_ME"
 
   # Match your board. S3: esp32-s3-devkitc-1 / esp32s3 / 16MB (N16R8).
   #                     C6: esp32-c6-devkitc-1 / esp32c6 / 8MB  (N8).
@@ -54,11 +59,9 @@ wifi:
   reboot_timeout: 0s
   ap:
     ssid: "${name} setup"
+    password: ${ap_password}
 
 captive_portal:
-
-web_server:
-  port: 80
 
 globals:
   - id: t_left_closed
@@ -120,6 +123,7 @@ switch:
     restore_mode: ALWAYS_OFF
     pin:
       number: ${pin_relay}
+      inverted: ${relay_inverted}
 
 button:
   - platform: template
