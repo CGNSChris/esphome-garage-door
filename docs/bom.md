@@ -54,6 +54,8 @@ Everything, in one place, for pasting into a cart. Detail and reasoning below.
 - [ ] 1 × double-sided perfboard 5×7 cm
 - [ ] 2 × KF301-2P screw terminal block
 - [ ] 1 × 2.54 mm female pin header strip
+- [ ] 1 × 2.54 mm **male** pin header strip + a few **jumper shunts** (coil-supply link)
+- [ ] 1 × 470 µF 16 V electrolytic capacitor
 - [ ] 1 × 22 AWG silicone hookup wire kit
 - [ ] 1 × non-metallic ABS project box, IP-rated
 - [ ] 3 × PG7 cable gland
@@ -83,17 +85,19 @@ power supply. The two dev boards are roughly a third of it.
 | 6 | 1 | Perfboard | `double sided prototype PCB 5x7cm` | 3 /10 | Solder it down. Dupont jumpers will not survive a garage. |
 | 7 | 2 | Screw terminal block | `KF301-2P 5.08mm PCB screw terminal` | 2 /20 | One per endstop run. The chosen relay module has its own input screw terminal, so no third block is needed. |
 | 8 | 1 | Pin header / socket strip | `2.54mm female pin header strip` | 2 /50 | Socket the dev board rather than soldering it — swapping it shouldn't mean desoldering. Note the S3-DevKitC-1 is **wider** than a C3/C6 DevKit; check your socket spacing against the actual board. |
-| 9 | 1 | Hookup wire, 22 AWG | `22AWG silicone wire kit 6 colours` | 5–7 | Silicone stranded is far easier than solid-core PVC. |
-| 10 | 1 | ABS enclosure | `ABS project box 100x60x25 waterproof` | 2–4 | **Non-metallic** — a metal box kills WiFi and the BLE proxy. IP-rated is worth it in a garage. |
-| 11 | 3 | Cable gland, PG7 | `PG7 cable gland nylon` | 2 /20 | Two endstop runs plus the relay output. |
-| 12 | — | Fixings | `3M VHB pads`, `cable ties` | 3–5 | VHB for the reeds — see the note in [wiring.md](wiring.md) about keeping the *open* endstop adjustable. |
+| 9 | 1 | Male header + jumper shunts | `2.54mm male pin header` / `2.54mm jumper cap` | 2 /100 | A 3-pin header carries the **coil-supply link**: outer pins to 3V3 and 5V, centre to the module's `DC+`. Lets one build take either coil variant. A 2-pin shunt can only bridge centre-to-side, so the rails cannot be shorted — but never fit two. |
+| 10 | 1 | 470 µF 16 V electrolytic | `470uF 16V electrolytic capacitor` | 2 /20 | Across the relay module's `DC+`/`DC-` terminals — at the module, not on a named rail, so it decouples whichever supply the link selects. |
+| 11 | 1 | Hookup wire, 22 AWG | `22AWG silicone wire kit 6 colours` | 5–7 | Silicone stranded is far easier than solid-core PVC. |
+| 12 | 1 | ABS enclosure | `ABS project box 100x60x25 waterproof` | 2–4 | **Non-metallic** — a metal box kills WiFi and the BLE proxy. IP-rated is worth it in a garage. |
+| 13 | 3 | Cable gland, PG7 | `PG7 cable gland nylon` | 2 /20 | Two endstop runs plus the relay output. |
+| 14 | — | Fixings | `3M VHB pads`, `cable ties` | 3–5 | VHB for the reeds — see the note in [wiring.md](wiring.md) about keeping the *open* endstop adjustable. |
 
 ## 3. Buy locally
 
 | # | Qty | Item | Why local |
 |---|---|---|---|
-| 13 | 20–30 m | 2-core alarm cable, 0.5 mm² | Bulk cable is heavy; shipping wipes out the saving and lead time is weeks. **Two runs now, not one** — closed endstop at the door, open endstop up the track. Jaycar, Bunnings, or an electrical wholesaler. |
-| 14 | 1 | 5 V 1 A USB-C supply | Correct plug type and actual electrical compliance on something powered 24/7. Don't buy an unbranded charger for this. Use a spare you trust if you have one. |
+| 15 | 20–30 m | 2-core alarm cable, 0.5 mm² | Bulk cable is heavy; shipping wipes out the saving and lead time is weeks. **Two runs now, not one** — closed endstop at the door, open endstop up the track. Jaycar, Bunnings, or an electrical wholesaler. |
+| 16 | 1 | 5 V 1 A USB-C supply | Correct plug type and actual electrical compliance on something powered 24/7. Don't buy an unbranded charger for this. Use a spare you trust if you have one. |
 
 ### On arrival, before building
 
@@ -102,10 +106,10 @@ power supply. The two dev boards are roughly a third of it.
   `endstop_open_inverted` to match what actually turned up — they are separate
   substitutions precisely because the two sensors may not agree.
 - **Check the dev board's module marking**, not the listing title (see §4).
-- **Set the H/L jumper to H.** Then check the relay cube's marking: a 3 V coil
-  (`SRD-03VDC-SL-C` / `HK4100F-DC3V`) wires VCC straight to 3V3. A 5 V coil
-  (`SRD-05VDC-SL-C`) needs the VCC–JD-VCC jumper removed and JD-VCC from 5 V —
-  driven straight from 3.3 V it often fails to *release* rather than to close.
+- **Set the H/L jumper to H**, then **read the coil voltage off the relay cube**
+  and set the supply link to match: `03VDC` → **3V3**, `05VDC` → **5V**. Leave
+  the link on 3V3 until you have read it — 5 V on a 3 V coil cooks it, whereas
+  3.3 V on a 5 V coil merely fails to click.
 - **Determine whether the module is active-high or active-low** before wiring
   anything, and set the resistor direction and `relay_inverted` to match. This
   is the single most consequential check on the list — see

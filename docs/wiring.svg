@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 925" width="980" height="925" role="img" aria-labelledby="svgtitle svgdesc">
   <title id="svgtitle">Garage door controller wiring (ESP32-S3 or ESP32-C6)</title>
-  <desc id="svgdesc">Two reed endstops switch to ground on GPIO18 and GPIO10 with internal pull-ups. The controller has no button of its own. GPIO7 drives an opto-isolated relay module with a 3 volt coil, powered from 3.3 volts, and carries a mandatory 10 kilohm resistor to ground. The relay's dry contact and the opener's existing wall switch both bridge the same two wall-button terminals, in parallel, so either can operate the door; the existing wall switch is never connected to the ESP32. GPIO2 drives a status LED through a 1 kilohm resistor.</desc>
+  <desc id="svgdesc">Two reed endstops switch to ground on GPIO18 and GPIO10 with internal pull-ups. The controller has no button of its own. GPIO7 drives an opto-isolated relay module, whose coil supply is selected by a link between 3.3 volts and 5 volts to suit either coil variant, and carries a mandatory 10 kilohm resistor to ground. The relay's dry contact and the opener's existing wall switch both bridge the same two wall-button terminals, in parallel, so either can operate the door; the existing wall switch is never connected to the ESP32. GPIO2 drives a status LED through a 1 kilohm resistor.</desc>
 
   <rect x="0" y="0" width="980" height="925" fill="#ffffff"/>
   <rect x="0.5" y="0.5" width="979" height="924" fill="none" stroke="#dddddd"/>
@@ -56,11 +56,16 @@
     <!-- ============ RIGHT: relay module ============ -->
     <rect x="660" y="150" width="210" height="220" rx="6" fill="#f2f2f0" stroke="#1a1a1a" stroke-width="2"/>
     <text x="765" y="180" font-size="13" font-weight="700" text-anchor="middle">Relay module</text>
-    <text x="765" y="198" font-size="10" fill="#555555" text-anchor="middle">opto-isolated &#183; 3 V coil &#183; H/L set to H</text>
+    <text x="765" y="198" font-size="10" fill="#555555" text-anchor="middle">opto-isolated &#183; H/L jumper set to H</text>
 
-    <line x1="560" y1="220" x2="660" y2="220" stroke="#1a1a1a" stroke-width="2"/>
-    <text x="610" y="212" font-size="11" font-weight="700" text-anchor="middle">3V3</text>
-    <text x="670" y="224" font-size="10" font-weight="700">VCC</text>
+    <line x1="560" y1="206" x2="596" y2="206" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="578" y="199" font-size="10" font-weight="700" text-anchor="middle">3V3</text>
+    <line x1="560" y1="234" x2="596" y2="234" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="578" y="248" font-size="10" font-weight="700" text-anchor="middle">5V</text>
+    <rect x="596" y="194" width="38" height="52" rx="3" fill="#ffffff" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="5 3"/>
+    <text x="615" y="224" font-size="10" font-weight="700" text-anchor="middle">LINK</text>
+    <line x1="634" y1="220" x2="660" y2="220" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="670" y="224" font-size="10" font-weight="700">DC+</text>
 
     <line x1="560" y1="270" x2="660" y2="270" stroke="#1a1a1a" stroke-width="2"/>
     <text x="632" y="262" font-size="11" font-weight="700" text-anchor="middle">GPIO7</text>
@@ -68,7 +73,7 @@
 
     <line x1="660" y1="320" x2="640" y2="320" stroke="#1a1a1a" stroke-width="2"/>
     <line x1="640" y1="320" x2="640" y2="700" stroke="#1a1a1a" stroke-width="2"/>
-    <text x="670" y="324" font-size="10" font-weight="700">GND</text>
+    <text x="670" y="324" font-size="10" font-weight="700">DC-</text>
 
     <!-- the relay's dry contact, bridging the two opener terminals -->
     <circle cx="720" cy="340" r="3.5" fill="#1f6feb"/>
@@ -132,7 +137,7 @@
     <text x="40" y="830" font-size="10" fill="#555555">Door position never comes from the control path &#8212; it comes from the two reeds, so the door is tracked however it was moved (wall switch, handset, or us).</text>
     <text x="40" y="848" font-size="10" fill="#c0392b" font-weight="700">The 10 k&#8486; pull-down is not optional &#8212; the relay GPIO floats between power-on and firmware boot, and a floating relay input can latch on.</text>
     <text x="40" y="866" font-size="10" fill="#555555">Reserved &#8212; S3: 19/20 USB, 0/3/45/46 strapping, 43/44 UART0, 26&#8211;32 flash, 33&#8211;37 octal PSRAM. C6: 12/13 USB, 4/5/8/9/15 strapping, 16/17 UART0, 24&#8211;30 flash.</text>
-    <text x="40" y="884" font-size="10" fill="#555555">Relay module: 3 V coil, H/L trigger jumper set to H. A 5 V-coil module instead needs its VCC&#8211;JD-VCC jumper removed &#8212; see wiring.md.</text>
+    <text x="40" y="884" font-size="10" fill="#555555">Relay module: H/L jumper to H. LINK picks the coil supply per the cube marking. Default it to 3V3 &#8212; 5 V on a 3 V coil overheats it; 3.3 V on a 5 V coil merely fails to pull in.</text>
     <text x="40" y="902" font-size="10" fill="#555555">Blue = opener-side circuit, galvanically isolated from the ESP32 by the relay's optocoupler. It shares no ground with the controller.</text>
   </g>
 

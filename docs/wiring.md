@@ -73,81 +73,61 @@ numbers across chip families without re-checking them.
 
 ## Which relay module to buy, and how to power it
 
-**Best case: a 1-channel module with a 3 V coil and an H/L trigger jumper.**
-That combination needs no tricks — three wires and one jumper setting — and it
-is what the diagram shows.
+**Build it to take either coil voltage.** These modules ship in 3 V and 5 V coil
+variants, multi-variant listings often show the wrong one in the photo, and you
+cannot confirm which you have until it is in your hand. Rather than guess, fit a
+**supply link** and decide on arrival — it costs one 3-pin header and a jumper.
 
 | Pin | Connect to |
 |---|---|
-| `VCC` | **3V3** |
-| `GND` | GND |
+| `DC+` | centre pin of a 3-pin header; outer pins go to **3V3** and **5V** |
+| `DC-` | GND |
 | `IN` | `GPIO7` |
 
-Set the **H/L jumper to H** (active-high), which matches the shipped
-`relay_inverted: "false"` and the 10 kΩ pull-down. Done.
+Set the module's **H/L jumper to H** (active-high), matching the shipped
+`relay_inverted: "false"` and the 10 kΩ pull-down. That part is the same either
+way — the opto input's threshold is set by its own series resistor, not by the
+coil supply, so the firmware needs no change at all.
 
-### Verify the coil voltage from the photos, not the description
+A 2-pin shunt on a 3-pin header can only ever bridge centre-to-one-side, so the
+rails cannot be shorted by a misplaced jumper. **Never fit two shunts** — that
+would tie 5 V to the 3.3 V rail.
 
-Listing copy is templated and frequently wrong. The claim that matters is the
-coil voltage, and the truth is printed on the relay cube itself:
+### Default the link to 3V3 — the two failure directions are not symmetric
 
-| Marking on the cube | Coil | Verdict |
-|---|---|---|
-| `SRD-03VDC-SL-C` | 3 V | correct — wire as above |
-| `HK4100F-DC3V` | 3 V | correct — wire as above |
-| `SRD-05VDC-SL-C` | 5 V | the copy was wrong — use the 5 V path below |
+| Mistake | Result |
+|---|---|
+| 5 V coil fed **3.3 V** | Sees ~66 % of rated voltage; pull-in is ~70–75 %, so it just doesn't click. Obvious, harmless, diagnosed instantly. |
+| 3 V coil fed **5 V** | Dissipation goes as V²/R — about **2.8× rated power**. The coil cooks, and may work a while before failing, possibly stuck closed. |
 
-This is the same failure mode as the ESP32 module marking: read the silkscreen,
-not the title.
+So leave the link on **3V3** while building. Move it to **5V** only after reading
+`05VDC` on the relay cube. Being wrong in the safe direction is a non-event;
+being wrong the other way damages the part.
 
-### If you end up with a 5 V-coil module
+| Cube marking | Link position |
+|---|---|
+| `JQC3F-03VDC-C` / `SRD-03VDC-SL-C` | **3V3** |
+| `JQC3F-05VDC-C` / `SRD-05VDC-SL-C` | **5V** |
 
-Perfectly usable, and these are the easiest to source — but a 5 V-coil module
-driven straight from 3.3 V logic is unreliable. On the usual input topology the
-opto LED sits between VCC (5 V) and IN, so a 3.3 V "high" still leaves ~1.7 V
-across it — often enough to keep it partly conducting, and **the relay never
-cleanly releases.** The classic "my 5 V relay module won't switch off" fault.
+### Put the bulk capacitor at the module, not on a rail
 
-Most such modules carry a **3-pin GND / VCC / JD-VCC header with a jumper**,
-which exists precisely to fix this. Remove it and the supplies split:
-
-| Pin | Connect to | Feeds |
-|---|---|---|
-| `JD-VCC` | **5 V** (the dev board's 5 V pin, from USB) | the relay coil |
-| `VCC` | **3V3** | the optocoupler input side |
-| `IN` | `GPIO7` | — |
-| `GND` | GND | — |
-
-The opto then sees real 3.3 V logic while the coil gets its 5 V — and as a
-bonus the coil's ~70 mA comes off the USB 5 V rail rather than the board's
-3.3 V regulator. No JD-VCC pin? Feed `VCC` from 5 V, keep H/L on **H**, and
-confirm on the bench that the relay both closes *and fully releases*.
+Fit ~470 µF across the module's `DC+` / `DC-` terminals rather than on a named
+supply. One capacitor position then decouples whichever rail the link selects,
+and it is right next to the load it is smoothing. Bench test 1 (power-cycle plus
+a deliberately browned-out supply) is the check that it holds.
 
 ### Using the dev board's 5 V pin
 
-On both the S3-DevKitC-1 and the C6-DevKitC-1 the `5V` header pin is tied to the
-**USB VBUS rail** through a protection Schottky — the same rail that feeds the
-onboard 3.3 V regulator. So it is a legitimate supply for a 5 V relay coil, and
-a good one: ~70 mA drawn there never loads the LDO that is already supplying the
-chip's ~350 mA WiFi transmit peaks. A 5 V 1 A supply covers both comfortably.
+On both DevKitC-1 boards the `5V` header pin is tied to the **USB VBUS rail**
+through a protection Schottky — the same rail feeding the onboard 3.3 V
+regulator. It is a legitimate coil supply and a good one: ~70 mA drawn there
+never loads the LDO already supplying the chip's ~350 mA WiFi peaks.
 
-Three caveats:
-
-- **It only has 5 V when the board is USB-powered.** Power the DevKit by feeding
-  3.3 V straight to the `3V3` pin instead and that pin is dead — the relay would
-  silently stop working.
-- **Expect ~4.6–4.7 V, not 5.0 V**, because of the diode drop. Harmless: a
-  `JQC3F-05VDC` pulls in at roughly 70–75 % of rated coil voltage (~3.5 V), so
-  there is plenty of margin.
-- **Do not feed external 5 V into that pin while USB is connected.** One source
-  at a time.
-
-### Powering a 3 V coil from the 3V3 rail
-
-Fine on a DevKitC — its regulator is fed from USB and rated well above the
-~70 mA coil plus the chip's ~350 mA WiFi peaks. Fit a bulk capacitor (~470 µF)
-on the 3V3 rail near the module as cheap insurance, and treat bench test 1
-(power-cycle plus a deliberately browned-out supply) as the check that it holds.
+- **It only has 5 V when the board is USB-powered.** Feed 3.3 V straight to the
+  `3V3` pin instead and that pin is dead.
+- **Expect ~4.6–4.7 V**, not 5.0 V, because of the diode drop. Harmless — a
+  `JQC3F-05VDC` pulls in around 3.5 V.
+- **Do not back-feed external 5 V** into it while USB is connected.
 
 ### If it is a 10 A module, the rating is irrelevant — and slightly imperfect
 
