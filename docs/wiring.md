@@ -16,8 +16,10 @@ either, and swapping boards needs no rewiring. Pick your entry point:
 ![Wiring diagram: two reed endstops switch to ground on GPIO18 and GPIO10 with internal pull-ups; GPIO7 drives an opto-isolated relay and carries a mandatory 10 kΩ resistor; the relay's dry contact parallels the opener's existing wall switch across the same two terminals](wiring.svg)
 
 The two reed switches share a common ground with the controller. The relay's
-contacts do **not** — they are a dry contact on the far side of the
-module's optocoupler.
+contacts do **not** — the contacts are mechanically separate from the coil
+inside the relay, so the opener side shares no ground with the ESP32 at all.
+(The optocoupler isolates the *input* side; the contact isolation is the
+relay's own construction, and would hold even without it.)
 
 **Your existing wall switch stays connected.** The relay contact and the wall
 switch bridge the *same two* opener terminals, so they sit in parallel and
@@ -69,11 +71,66 @@ contact on GPIO18, which is a USB pin on the C3. It worked only because their
 board carries a CH340 bridge and doesn't use native USB. Never inherit pin
 numbers across chip families without re-checking them.
 
+## Which relay module to buy, and how to power it
+
+**Buy the ordinary 1-channel 10 A module with an H/L trigger jumper.** It is
+far easier to source than a 3.3 V-coil module, and the jumpers make both of
+the awkward decisions for you instead of forcing you to decode a listing.
+
+What to look for:
+
+- **H/L trigger jumper** — set it to **H**. That makes it active-high, which
+  matches the shipped `relay_inverted: "false"` and the 10 kΩ pull-down.
+- **A 3-pin power header: GND / VCC / JD-VCC**, with a jumper bridging
+  VCC–JD-VCC. This is the important one; see below.
+- An optocoupler (PC817 or similar) on the input.
+
+### Remove the VCC–JD-VCC jumper
+
+A 5 V-coil module driven straight from 3.3 V logic is unreliable. On the usual
+input topology the opto LED sits between VCC (5 V) and IN, so a 3.3 V "high"
+still leaves ~1.7 V across it — often enough to keep it partly conducting, and
+**the relay never cleanly releases.** This is the classic "my 5 V relay module
+won't switch off" fault.
+
+The jumper exists precisely to fix this. Remove it and the two supplies split:
+
+| Pin | Connect to | Feeds |
+|---|---|---|
+| `JD-VCC` | **5 V** (the dev board's 5 V pin, from USB) | the relay coil |
+| `VCC` | **3V3** | the optocoupler input side |
+| `IN` | `GPIO7` | — |
+| `GND` | GND | — |
+
+Now the opto sees real 3.3 V logic and switches cleanly, while the coil gets
+the 5 V it wants. **Bonus:** the coil's ~70 mA is drawn from the USB 5 V rail
+rather than the board's 3.3 V regulator, which removes any brownout concern
+during WiFi transmit bursts.
+
+If your module has no JD-VCC pin, feed `VCC` from 5 V, keep the trigger jumper
+on **H**, and confirm on the bench that the relay both closes *and fully
+releases* before trusting it.
+
+### The 10 A contact rating is irrelevant — and slightly imperfect
+
+The contacts only bridge the opener's low-voltage button terminals, so 10 A is
+enormously over-spec. Harmless, and these modules are cheap and everywhere.
+
+The one real caveat: heavy silver-alloy contacts are designed to carry current,
+and switching only a few milliamps can eventually leave an oxide film that a
+low-current circuit cannot burn through. In practice these modules run garage
+openers for years without trouble, and the relay cycles only a handful of times
+a day. But if, months in, the door starts ignoring occasional commands while
+the wall switch still works, suspect contact oxidation — the fix is a signal
+relay with gold-plated contacts, not more firmware.
+
 ## Relay trigger polarity — get this right before powering up
 
-A 3.3 V coil is correct and is what the BOM asks for. The voltage is not the
-risk. **Whether the module is active-high or active-low is**, because it decides
-what the relay does during the power-on window before firmware boots.
+Coil voltage is not the risk — the section above covers powering it.
+**Whether the module is active-high or active-low is**, because it decides what
+the relay does during the power-on window before firmware boots. Setting the
+H/L jumper to **H** puts you in the safe first row and is why that module is
+recommended.
 
 | Module | Resistor | IN during boot | Relay | |
 |---|---|---|---|---|
@@ -139,9 +196,10 @@ on the ESP32 could offer.
    suppression in firmware are the second and third layers; the resistor is
    the first.
 2. **1 kΩ series resistor** on the status LED.
-3. **Opto-isolated relay module** with a 3 V / 3.3 V coil, triggered from 3.3 V
-   logic. Relay contacts wire in parallel with the opener's wall-button
-   terminals. Check its trigger polarity — see *Relay trigger polarity* above.
+3. **Opto-isolated relay module**, 1 channel, with an H/L trigger jumper and a
+   JD-VCC pin — see *Which relay module to buy* above for the jumper settings
+   and supply arrangement. Contacts wire in parallel with the opener's
+   wall-button terminals.
 4. **Two reed switches** (MC-38 class) with magnets, on 2-core alarm cable:
    - *Closed* endstop: magnet on the door, switch on the frame, aligned when
      the door is fully closed.
