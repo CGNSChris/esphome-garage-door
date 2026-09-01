@@ -9,6 +9,12 @@ second endstop is the entire premise.
 Prices are indicative AliExpress listings in USD and will drift. Search terms
 are what actually returns the right part.
 
+**Relay module chosen:** a SONGLE **`SRD-03VDC-SL-C`** 1-channel board — 3 V
+coil, NO/COM/NC screw terminals, 10 A contacts, H/L trigger jumper. Confirmed
+from the product photo 2026-08-27. Wires the simple way: `VCC`→3V3, `GND`,
+`IN`→GPIO7. Its input side is also a screw terminal, so **only two KF301 blocks
+are needed** (one per endstop run) rather than three.
+
 **Compatibility confirmed:** the target opener has a plain momentary
 dry-contact wall button (checked 2026-08-27), so the relay-across-the-terminals
 approach in item 2 applies as designed. If you are reusing this BOM on a
@@ -28,7 +34,7 @@ Everything, in one place, for pasting into a cart. Detail and reasoning below.
 - [ ] 1 × 3 mm LED assortment
 - [ ] 1 × ¼ W resistor assortment (must contain 10 kΩ, 1 kΩ, 4.7 kΩ)
 - [ ] 1 × double-sided perfboard 5×7 cm
-- [ ] 3 × KF301-2P screw terminal block
+- [ ] 2 × KF301-2P screw terminal block
 - [ ] 1 × 2.54 mm female pin header strip
 - [ ] 1 × 22 AWG silicone hookup wire kit
 - [ ] 1 × non-metallic ABS project box, IP-rated
@@ -57,7 +63,7 @@ power supply. The two dev boards are roughly a third of it.
 | # | Qty | Item | Search term | ≈USD | Notes |
 |---|---|---|---|---|---|
 | 6 | 1 | Perfboard | `double sided prototype PCB 5x7cm` | 3 /10 | Solder it down. Dupont jumpers will not survive a garage. |
-| 7 | 3 | Screw terminal block | `KF301-2P 5.08mm PCB screw terminal` | 2 /20 | One per endstop run, one for the relay output. Field wiring stays serviceable. |
+| 7 | 2 | Screw terminal block | `KF301-2P 5.08mm PCB screw terminal` | 2 /20 | One per endstop run. The chosen relay module has its own input screw terminal, so no third block is needed. |
 | 8 | 1 | Pin header / socket strip | `2.54mm female pin header strip` | 2 /50 | Socket the dev board rather than soldering it — swapping it shouldn't mean desoldering. Note the S3-DevKitC-1 is **wider** than a C3/C6 DevKit; check your socket spacing against the actual board. |
 | 9 | 1 | Hookup wire, 22 AWG | `22AWG silicone wire kit 6 colours` | 5–7 | Silicone stranded is far easier than solid-core PVC. |
 | 10 | 1 | ABS enclosure | `ABS project box 100x60x25 waterproof` | 2–4 | **Non-metallic** — a metal box kills WiFi and the BLE proxy. IP-rated is worth it in a garage. |
