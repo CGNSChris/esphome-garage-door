@@ -53,6 +53,8 @@ What to order and why this part: [docs/bom.md](docs/bom.md).
 
 1. Copy the entry point for your board (`garage-door.yaml` for the S3,
    `garage-door-c6.yaml` for the C6) and set the substitutions (WiFi, polarity).
+   If you keep both files, edit them **both** — the CI parity check fails if
+   any non-board value differs.
 2. First flash by USB: `esphome run <your-entry-point>.yaml`, or use the
    [hosted web flasher](https://cgnschris.github.io/esphome-garage-door/),
    which detects which chip you plugged in and flashes the matching image.

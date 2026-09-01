@@ -77,6 +77,11 @@ substitutions:
   open_duration: "18.0"
   close_duration: "18.0"
   travel_timeout_factor: "1.5"
+  # Fixed allowance (seconds) added on top of the factored travel time. Covers
+  # up to three relay pulses of sequencing (~3.3 s) plus the Type B wrong-way
+  # nudge before the door heads the right way. Do not take the factor below
+  # ~1.3 expecting this to absorb the difference.
+  travel_timeout_extra: "5.0"
 
   # --- Optional BLE proxy ----------------------------------------------------
   ble_proxy_enabled: "true"

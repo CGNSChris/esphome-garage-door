@@ -150,6 +150,10 @@ script:
           }
           if (ns == 0) { id(position_est) = 0.0f; id(pos_valid) = true; }
           if (ns == 1) { id(position_est) = 1.0f; id(pos_valid) = true; }
+          // Either fault means the position is genuinely unknown; drop the
+          // estimate so publish_all reports the fail-safe OPEN, not a
+          // confident number the interval has been walking toward 0.99.
+          if (ns == 5 || ns == 6) id(pos_valid) = false;
           if (prev != ns)
             ESP_LOGI("door", "State: %s -> %s", NAMES[prev], NAMES[ns]);
           id(publish_all).execute();
@@ -163,7 +167,8 @@ script:
       - delay: !lambda |-
           return (uint32_t) (std::max((float) ${open_duration},
                                       (float) ${close_duration})
-                             * (float) ${travel_timeout_factor} * 1000.0f);
+                             * (float) ${travel_timeout_factor} * 1000.0f
+                             + (float) ${travel_timeout_extra} * 1000.0f);
       - lambda: |-
           const int s = id(door_state);
           if (s == 2 || s == 3) {
@@ -273,7 +278,15 @@ script:
             // Only meaningful while moving (upstream W7: Athom pulsed the
             // relay unconditionally on stop, which REVERSES many openers).
             if (s == 2 || s == 3) {
-              id(pulse_relay).execute(1);    // 1 pulse stops on both types
+              if (!type_b) {
+                // A Type A opener has no stop: by its own definition a press
+                // while moving REVERSES. Pulsing here would send the door the
+                // other way while we recorded STOPPED with the timer off.
+                ESP_LOGW("door", "Stop refused: a reverse-type opener cannot "
+                                 "stop mid-travel; command the other direction");
+                return;
+              }
+              id(pulse_relay).execute(1);    // Type B: one press stops
               id(transition_to).execute(4);
             }
           }
@@ -283,6 +296,11 @@ script:
     mode: single
     then:
       - lambda: |-
+          // Any endstop arrival invalidates an in-flight pulse sequence: the
+          // remaining presses would act on a state we now know is wrong.
+          // Force the relay off too, in case we stopped mid-pulse.
+          id(pulse_relay).stop();
+          id(relay_output).turn_off();
           if (id(endstop_open).state) {      // both active: impossible
             id(transition_to).execute(6);
             return;
@@ -321,6 +339,8 @@ script:
     mode: single
     then:
       - lambda: |-
+          id(pulse_relay).stop();            // see on_closed_endstop_active
+          id(relay_output).turn_off();
           if (id(endstop_closed).state) {
             id(transition_to).execute(6);
             return;

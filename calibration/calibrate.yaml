@@ -1,7 +1,8 @@
 # calibrate.yaml — TEMPORARY standalone config for measuring travel durations
 # and determining the opener's cycle type. Flash this, run the procedure in
-# docs/calibration.md, write the numbers into garage-door.yaml's
-# substitutions, then flash the real firmware.
+# docs/calibration.md, write the numbers into BOTH entry points
+# (garage-door.yaml and garage-door-c6.yaml — CI parity requires they match),
+# then flash the real firmware.
 #
 # It has no state machine on purpose: it pulses the relay when you press the
 # HA button and reports the time between leaving one endstop and reaching the

@@ -22,7 +22,7 @@ Set `opener_cycle_mode` accordingly: `reverse` or `stop_then_reverse`
 | OPEN → CLOSING | 1 | 1 |
 | OPENING → CLOSING | 1 | 2 (stop, go) |
 | CLOSING → OPENING | 1 | 2 (stop, go) |
-| moving → STOPPED_PARTIAL | 1 | 1 |
+| moving → STOPPED_PARTIAL | **refused** — a Type A opener has no stop | 1 |
 | STOPPED → opposite of last travel | 1 | 1 |
 | STOPPED → same as last travel | 1 | **3** (wrong way, stop, right way) |
 

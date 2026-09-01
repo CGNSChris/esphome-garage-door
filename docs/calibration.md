@@ -25,7 +25,8 @@ to confirm, not to start.
      `opener_cycle_mode: reverse`.
    - The door **stops** (and a further press moves it the other way) →
      **Type B**, set `opener_cycle_mode: stop_then_reverse`.
-4. Record the result in `garage-door.yaml`.
+4. Record the result in **both** `garage-door.yaml` and `garage-door-c6.yaml` —
+   CI's parity check fails if the two differ.
 
 This works with the wall button alone. Nothing needs to be wired to the opener
 for it, because the wall button and the relay do exactly the same thing.
@@ -58,7 +59,8 @@ Also doable today, with a phone stopwatch.
    **Last Open Duration** sensor reports it automatically from the endstops,
    which is worth doing as a check.)
 2. Repeat for the close direction. Close is often slower than open.
-3. Write the values into `garage-door.yaml`:
+3. Write the values into **both** entry points (`garage-door.yaml` and
+   `garage-door-c6.yaml` — the CI parity check requires them to match):
 
 ```yaml
 open_duration: "18.4"
@@ -66,9 +68,12 @@ close_duration: "17.9"
 ```
 
 Times are in seconds, quoted, decimals allowed. The travel timeout is
-`max(open, close) × travel_timeout_factor` (default 1.5); if the door is
-slower in winter, raise the factor rather than padding the durations, because
-the durations also drive the position estimate.
+`max(open, close) × travel_timeout_factor + travel_timeout_extra` (defaults
+1.5 and 5 s). The fixed extra covers relay-pulse sequencing and the Type B
+wrong-way nudge, which are not travel. If the door is slower in winter, raise
+the *factor* rather than padding the durations, because the durations also
+drive the position estimate. **Do not lower the factor below ~1.3** — a
+same-direction restart genuinely takes longer than a clean run.
 
 ## 3. Verify
 

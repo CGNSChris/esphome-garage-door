@@ -16,7 +16,21 @@ import sys
 # Keys allowed to differ between the two variants.
 BOARD_KEYS = {"board", "chip_variant", "flash_size", "variant_yaml"}
 
-SUB_RE = re.compile(r"^  ([a-z_]+):\s*(.*?)\s*(?:#.*)?$")
+KEY_RE = re.compile(r"^  ([A-Za-z0-9_]+):\s*(.*)$")
+
+
+def strip_comment(value):
+    """Drop a trailing ' # comment' but leave '#' inside quotes alone."""
+    quote = None
+    for i, ch in enumerate(value):
+        if quote:
+            if ch == quote:
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+        elif ch == "#" and (i == 0 or value[i - 1].isspace()):
+            return value[:i].rstrip()
+    return value.rstrip()
 
 
 def read_subs(path):
@@ -31,9 +45,9 @@ def read_subs(path):
                 # any non-indented, non-blank, non-comment line ends the block
                 if line and not line.startswith((" ", "#")):
                     break
-                m = SUB_RE.match(line)
+                m = KEY_RE.match(line)
                 if m:
-                    subs[m.group(1)] = m.group(2)
+                    subs[m.group(1)] = strip_comment(m.group(2))
     if not subs:
         sys.exit(f"{path}: no substitutions parsed — did the format change?")
     return subs
